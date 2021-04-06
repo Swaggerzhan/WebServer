@@ -1,7 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/WebServer.dir/main.cpp.o"
-  "WebServer"
   "WebServer.pdb"
+  "WebServer"
 )
 
 # Per-language clean rules from dependency scanning.

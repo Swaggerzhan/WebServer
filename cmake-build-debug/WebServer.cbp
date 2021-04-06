@@ -1,90 +1,100 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_project_file>
-	<FileVersion major="1" minor="6"/>
-	<Project>
-		<Option title="WebServer"/>
-		<Option makefile_is_custom="1"/>
-		<Option compiler="gcc"/>
-		<Option virtualFolders="CMake Files\;"/>
-		<Build>
-			<Target title="all">
-				<Option working_dir="/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug"/>
-				<Option type="4"/>
-				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-				</MakeCommands>
-			</Target>
-			<Target title="rebuild_cache">
-				<Option working_dir="/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug"/>
-				<Option type="4"/>
-				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-				</MakeCommands>
-			</Target>
-			<Target title="edit_cache">
-				<Option working_dir="/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug"/>
-				<Option type="4"/>
-				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-				</MakeCommands>
-			</Target>
-			<Target title="WebServer">
-				<Option output="/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/WebServer" prefix_auto="0" extension_auto="0"/>
-				<Option working_dir="/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug"/>
-				<Option object_output="./"/>
-				<Option type="1"/>
-				<Option compiler="gcc"/>
-				<Compiler>
-					<Add directory="/Library/Developer/CommandLineTools/usr/bin/../include/c++/v1"/>
-					<Add directory="/usr/local/include"/>
-					<Add directory="/Library/Developer/CommandLineTools/usr/lib/clang/12.0.0/include"/>
-					<Add directory="/Library/Developer/CommandLineTools/usr/include"/>
-					<Add directory="/System/Library/Frameworks"/>
-					<Add directory="/Library/Frameworks"/>
-				</Compiler>
-				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 WebServer"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-				</MakeCommands>
-			</Target>
-			<Target title="WebServer/fast">
-				<Option output="/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/WebServer" prefix_auto="0" extension_auto="0"/>
-				<Option working_dir="/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug"/>
-				<Option object_output="./"/>
-				<Option type="1"/>
-				<Option compiler="gcc"/>
-				<Compiler>
-					<Add directory="/Library/Developer/CommandLineTools/usr/bin/../include/c++/v1"/>
-					<Add directory="/usr/local/include"/>
-					<Add directory="/Library/Developer/CommandLineTools/usr/lib/clang/12.0.0/include"/>
-					<Add directory="/Library/Developer/CommandLineTools/usr/include"/>
-					<Add directory="/System/Library/Frameworks"/>
-					<Add directory="/Library/Frameworks"/>
-				</Compiler>
-				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 WebServer/fast"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/zhiyi/CLionProjects/WebServer/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-				</MakeCommands>
-			</Target>
-		</Build>
-		<Unit filename="/Users/zhiyi/CLionProjects/WebServer/main.cpp">
-			<Option target="WebServer"/>
-		</Unit>
-		<Unit filename="/Users/zhiyi/CLionProjects/WebServer/CMakeLists.txt">
-			<Option virtualFolder="CMake Files\"/>
-		</Unit>
-	</Project>
+   <FileVersion major="1" minor="6" />
+   <Project>
+      <Option title="WebServer" />
+      <Option makefile_is_custom="1" />
+      <Option compiler="gcc" />
+      <Option virtualFolders="CMake Files\;" />
+      <Build>
+      <Target title="all">
+         <Option working_dir="/tmp/tmp.wM6lfk6s8e/cmake-build-debug" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 all" />
+            <CompileFile command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="edit_cache">
+         <Option working_dir="/tmp/tmp.wM6lfk6s8e/cmake-build-debug" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache" />
+            <CompileFile command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="WebServer">
+         <Option output="/tmp/tmp.wM6lfk6s8e/cmake-build-debug/WebServer" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/tmp/tmp.wM6lfk6s8e/cmake-build-debug" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/7" />
+            <Add directory="/usr/include/c++/7/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/7" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 WebServer" />
+            <CompileFile command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="WebServer/fast">
+         <Option output="/tmp/tmp.wM6lfk6s8e/cmake-build-debug/WebServer" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/tmp/tmp.wM6lfk6s8e/cmake-build-debug" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/7" />
+            <Add directory="/usr/include/c++/7/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/7" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 WebServer/fast" />
+            <CompileFile command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="rebuild_cache">
+         <Option working_dir="/tmp/tmp.wM6lfk6s8e/cmake-build-debug" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache" />
+            <CompileFile command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      </Build>
+      <Unit filename="/tmp/tmp.wM6lfk6s8e/HTTP/HttpHandler.h">
+         <Option target="WebServer"/>
+      </Unit>
+      <Unit filename="/tmp/tmp.wM6lfk6s8e/main.cpp">
+         <Option target="WebServer"/>
+      </Unit>
+      <Unit filename="/tmp/tmp.wM6lfk6s8e/utility.h">
+         <Option target="WebServer"/>
+      </Unit>
+      <Unit filename="/tmp/tmp.wM6lfk6s8e/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\" />
+      </Unit>
+   </Project>
 </CodeBlocks_project_file>

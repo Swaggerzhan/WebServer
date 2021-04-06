@@ -1,22 +1,32 @@
-Compiling the C compiler identification source file "CMakeCCompilerId.c" failed.
-Compiler: /Library/Developer/CommandLineTools/usr/bin/cc 
-Build flags: 
-Id flags:  
+Determining if the C compiler works failed with the following output:
+Change Dir: /tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp
 
-The output was:
-1
-ld: library not found for -lSystem
-clang: error: linker command failed with exit code 1 (use -v to see invocation)
+Run Build Command:"/usr/bin/cmake" "cmTC_fec0a/fast"
+CMake Error: The source directory "/tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp/cmTC_fec0a/fast" does not exist.
+Specify --help for usage, or press the help button on the CMake GUI.
 
 
-Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
-Compiler: /Library/Developer/CommandLineTools/usr/bin/c++ 
-Build flags: 
-Id flags:  
+Determining if the C compiler works failed with the following output:
+Change Dir: /tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp
 
-The output was:
-1
-ld: library not found for -lc++
-clang: error: linker command failed with exit code 1 (use -v to see invocation)
+Run Build Command:"/usr/bin/cmake" "cmTC_52fef/fast"
+CMake Error: The source directory "/tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp/cmTC_52fef/fast" does not exist.
+Specify --help for usage, or press the help button on the CMake GUI.
+
+
+Determining if the C compiler works failed with the following output:
+Change Dir: /tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/cmake" "cmTC_7dd76/fast"
+CMake Error: The source directory "/tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp/cmTC_7dd76/fast" does not exist.
+Specify --help for usage, or press the help button on the CMake GUI.
+
+
+Determining if the C compiler works failed with the following output:
+Change Dir: /tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/cmake" "cmTC_2ad4a/fast"
+CMake Error: The source directory "/tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp/cmTC_2ad4a/fast" does not exist.
+Specify --help for usage, or press the help button on the CMake GUI.
 
 
