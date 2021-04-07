@@ -6,5 +6,17 @@
 
 #IncludeRegexTransform: 
 
-/tmp/tmp.wM6lfk6s8e/main.cpp
+/tmp/tmp.rPPwDageMq/TEST/thread_test.h
+pthread.h
+-
+iostream
+-
+sys/poll.h
+-
+
+/tmp/tmp.rPPwDageMq/main.cpp
+iostream
+-
+TEST/thread_test.h
+/tmp/tmp.rPPwDageMq/TEST/thread_test.h
 

@@ -13,7 +13,7 @@ set(CMAKE_CXX_STANDARD 14)
 
 
 
-add_executable(WebServer main.cpp HTTP/HttpHandler.h utility.h BASE/Tree.h Server/Demo.h TEST/thread_test.h)
+add_executable(WebServer main.cpp HTTP/HttpHandler.h utility.h BASE/Tree.h Server/Demo.h TEST/thread_test.h TEST/threadPool.h)
 
 find_package(Threads)
 target_link_libraries(WebServer ${CMAKE_THREAD_LIBS_INIT})
