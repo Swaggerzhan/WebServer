@@ -1,32 +1,55 @@
-Determining if the C compiler works failed with the following output:
+Determining if the pthread_create exist failed with the following output:
 Change Dir: /tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/cmake" "cmTC_fec0a/fast"
-CMake Error: The source directory "/tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp/cmTC_fec0a/fast" does not exist.
-Specify --help for usage, or press the help button on the CMake GUI.
+Run Build Command:"/usr/bin/make" "cmTC_2cafb/fast"
+/usr/bin/make -f CMakeFiles/cmTC_2cafb.dir/build.make CMakeFiles/cmTC_2cafb.dir/build
+make[1]: Entering directory '/tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_2cafb.dir/CheckSymbolExists.c.o
+/usr/bin/gcc-7     -o CMakeFiles/cmTC_2cafb.dir/CheckSymbolExists.c.o   -c /tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_2cafb
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2cafb.dir/link.txt --verbose=1
+/usr/bin/gcc-7       CMakeFiles/cmTC_2cafb.dir/CheckSymbolExists.c.o  -o cmTC_2cafb -rdynamic 
+CMakeFiles/cmTC_2cafb.dir/CheckSymbolExists.c.o: In function `main':
+CheckSymbolExists.c:(.text+0x16): undefined reference to `pthread_create'
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_2cafb.dir/build.make:97: recipe for target 'cmTC_2cafb' failed
+make[1]: *** [cmTC_2cafb] Error 1
+make[1]: Leaving directory '/tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_2cafb/fast' failed
+make: *** [cmTC_2cafb/fast] Error 2
 
+File /tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <pthread.h>
 
-Determining if the C compiler works failed with the following output:
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
 Change Dir: /tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/cmake" "cmTC_52fef/fast"
-CMake Error: The source directory "/tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp/cmTC_52fef/fast" does not exist.
-Specify --help for usage, or press the help button on the CMake GUI.
-
-
-Determining if the C compiler works failed with the following output:
-Change Dir: /tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp
-
-Run Build Command:"/usr/bin/cmake" "cmTC_7dd76/fast"
-CMake Error: The source directory "/tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp/cmTC_7dd76/fast" does not exist.
-Specify --help for usage, or press the help button on the CMake GUI.
-
-
-Determining if the C compiler works failed with the following output:
-Change Dir: /tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp
-
-Run Build Command:"/usr/bin/cmake" "cmTC_2ad4a/fast"
-CMake Error: The source directory "/tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp/cmTC_2ad4a/fast" does not exist.
-Specify --help for usage, or press the help button on the CMake GUI.
+Run Build Command:"/usr/bin/make" "cmTC_2aada/fast"
+/usr/bin/make -f CMakeFiles/cmTC_2aada.dir/build.make CMakeFiles/cmTC_2aada.dir/build
+make[1]: Entering directory '/tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_2aada.dir/CheckFunctionExists.c.o
+/usr/bin/gcc-7    -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_2aada.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.5/Modules/CheckFunctionExists.c
+Linking C executable cmTC_2aada
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2aada.dir/link.txt --verbose=1
+/usr/bin/gcc-7   -DCHECK_FUNCTION_EXISTS=pthread_create    CMakeFiles/cmTC_2aada.dir/CheckFunctionExists.c.o  -o cmTC_2aada -rdynamic -lpthreads 
+/usr/bin/ld: cannot find -lpthreads
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_2aada.dir/build.make:97: recipe for target 'cmTC_2aada' failed
+make[1]: *** [cmTC_2aada] Error 1
+make[1]: Leaving directory '/tmp/tmp.wM6lfk6s8e/cmake-build-debug/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_2aada/fast' failed
+make: *** [cmTC_2aada/fast] Error 2
 
 

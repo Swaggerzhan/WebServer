@@ -34,14 +34,6 @@
          <Option type="1" />
          <Option compiler="gcc" />
          <Compiler>
-            <Add directory="/usr/include" />
-            <Add directory="/usr/include/c++/7" />
-            <Add directory="/usr/include/c++/7/backward" />
-            <Add directory="/usr/include/x86_64-linux-gnu" />
-            <Add directory="/usr/include/x86_64-linux-gnu/c++/7" />
-            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include" />
-            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed" />
-            <Add directory="/usr/local/include" />
          </Compiler>
          <MakeCommands>
             <Build command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 WebServer" />
@@ -57,14 +49,6 @@
          <Option type="1" />
          <Option compiler="gcc" />
          <Compiler>
-            <Add directory="/usr/include" />
-            <Add directory="/usr/include/c++/7" />
-            <Add directory="/usr/include/c++/7/backward" />
-            <Add directory="/usr/include/x86_64-linux-gnu" />
-            <Add directory="/usr/include/x86_64-linux-gnu/c++/7" />
-            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include" />
-            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed" />
-            <Add directory="/usr/local/include" />
          </Compiler>
          <MakeCommands>
             <Build command="/usr/bin/cmake -f &quot;/tmp/tmp.wM6lfk6s8e/cmake-build-debug/Makefile&quot;  VERBOSE=1 WebServer/fast" />
@@ -84,7 +68,16 @@
          </MakeCommands>
       </Target>
       </Build>
+      <Unit filename="/tmp/tmp.wM6lfk6s8e/BASE/Tree.h">
+         <Option target="WebServer"/>
+      </Unit>
       <Unit filename="/tmp/tmp.wM6lfk6s8e/HTTP/HttpHandler.h">
+         <Option target="WebServer"/>
+      </Unit>
+      <Unit filename="/tmp/tmp.wM6lfk6s8e/Server/Demo.h">
+         <Option target="WebServer"/>
+      </Unit>
+      <Unit filename="/tmp/tmp.wM6lfk6s8e/TEST/thread_test.h">
          <Option target="WebServer"/>
       </Unit>
       <Unit filename="/tmp/tmp.wM6lfk6s8e/main.cpp">

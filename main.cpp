@@ -1,7 +1,8 @@
 #include <iostream>
+#include "TEST/thread_test.h"
 
 int main() {
-    //testforchange
-    std::cout << "Hello, World!" << std::endl;
-    return 0;
+
+
+    pthreadTest();
 }
