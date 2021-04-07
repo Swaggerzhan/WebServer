@@ -42,6 +42,14 @@ void *write_thread(void *arg){
 
     pthread_mutex_unlock(write_lock);
 
+    pthread_t self = pthread_self();
+    cout << "write_thread's id: " << self << endl;
+
+    int *ret = new int;
+    *ret = 10;
+
+    return ret;
+
 }
 
 void pthreadTest(){
@@ -51,7 +59,9 @@ void pthreadTest(){
     pthread_create(&t1, nullptr, read_thread, &lock);
     pthread_create(&t2, nullptr, write_thread, (void*)&lock);
     pthread_join(t1, nullptr);
-    pthread_join(t2, nullptr);
+    void *ret;
+    pthread_join(t2, &ret);
+    cout << "write_thread return value: " << *(int*)ret << endl;
 }
 
 

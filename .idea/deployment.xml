@@ -2,10 +2,10 @@
 <project version="4">
   <component name="PublishConfigData">
     <serverData>
-      <paths name="new_linux_agent (40b8ca7d-a65e-4ae3-880d-6783b45c30d2)">
+      <paths name="Remote Host (e693810a-de52-4df0-a468-88aa75f94d7a)">
         <serverdata>
           <mappings>
-            <mapping deploy="/tmp/tmp.rPPwDageMq" local="$PROJECT_DIR$" />
+            <mapping deploy="/tmp/tmp.lGJb5QMYLR" local="$PROJECT_DIR$" />
           </mappings>
           <excludedPaths>
             <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug" />

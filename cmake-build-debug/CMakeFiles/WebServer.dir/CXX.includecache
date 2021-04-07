@@ -6,7 +6,11 @@
 
 #IncludeRegexTransform: 
 
-/tmp/tmp.rPPwDageMq/TEST/thread_test.h
+/tmp/tmp.lGJb5QMYLR/TEST/DI.h
+iostream
+-
+
+/tmp/tmp.lGJb5QMYLR/TEST/thread_test.h
 pthread.h
 -
 iostream
@@ -14,9 +18,11 @@ iostream
 sys/poll.h
 -
 
-/tmp/tmp.rPPwDageMq/main.cpp
+/tmp/tmp.lGJb5QMYLR/main.cpp
 iostream
 -
 TEST/thread_test.h
-/tmp/tmp.rPPwDageMq/TEST/thread_test.h
+/tmp/tmp.lGJb5QMYLR/TEST/thread_test.h
+TEST/DI.h
+/tmp/tmp.lGJb5QMYLR/TEST/DI.h
 

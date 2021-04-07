@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /tmp/tmp.rPPwDageMq
+CMAKE_SOURCE_DIR = /tmp/tmp.lGJb5QMYLR
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /tmp/tmp.rPPwDageMq/cmake-build-debug
+CMAKE_BINARY_DIR = /tmp/tmp.lGJb5QMYLR/cmake-build-debug
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,9 +80,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /tmp/tmp.rPPwDageMq/cmake-build-debug/CMakeFiles /tmp/tmp.rPPwDageMq/cmake-build-debug/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /tmp/tmp.lGJb5QMYLR/cmake-build-debug/CMakeFiles /tmp/tmp.lGJb5QMYLR/cmake-build-debug/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /tmp/tmp.rPPwDageMq/cmake-build-debug/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /tmp/tmp.lGJb5QMYLR/cmake-build-debug/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -123,6 +123,33 @@ WebServer/fast:
 	$(MAKE) -f CMakeFiles/WebServer.dir/build.make CMakeFiles/WebServer.dir/build
 .PHONY : WebServer/fast
 
+TEST/DI.o: TEST/DI.cpp.o
+
+.PHONY : TEST/DI.o
+
+# target to build an object file
+TEST/DI.cpp.o:
+	$(MAKE) -f CMakeFiles/WebServer.dir/build.make CMakeFiles/WebServer.dir/TEST/DI.cpp.o
+.PHONY : TEST/DI.cpp.o
+
+TEST/DI.i: TEST/DI.cpp.i
+
+.PHONY : TEST/DI.i
+
+# target to preprocess a source file
+TEST/DI.cpp.i:
+	$(MAKE) -f CMakeFiles/WebServer.dir/build.make CMakeFiles/WebServer.dir/TEST/DI.cpp.i
+.PHONY : TEST/DI.cpp.i
+
+TEST/DI.s: TEST/DI.cpp.s
+
+.PHONY : TEST/DI.s
+
+# target to generate assembly for a file
+TEST/DI.cpp.s:
+	$(MAKE) -f CMakeFiles/WebServer.dir/build.make CMakeFiles/WebServer.dir/TEST/DI.cpp.s
+.PHONY : TEST/DI.cpp.s
+
 main.o: main.cpp.o
 
 .PHONY : main.o
@@ -159,6 +186,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... WebServer"
 	@echo "... rebuild_cache"
+	@echo "... TEST/DI.o"
+	@echo "... TEST/DI.i"
+	@echo "... TEST/DI.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
