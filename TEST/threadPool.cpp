@@ -26,7 +26,7 @@ ConsumeThread::ConsumeThread(WorkLine* workLine){
     while (1) {
         Work *work = workLine->getWork();
         if (work == nullptr){
-            cout << "not work to do, waiting..." << endl;
+            cout << "not work to do, waiting...." << endl;
             // poll(nullptr, 0, 5);
             sleep(1);
             continue;

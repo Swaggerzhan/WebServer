@@ -1,3 +1,0 @@
-/tmp/tmp.IIZTWulPjU/cmake-build-debug/CMakeFiles/edit_cache.dir
-/tmp/tmp.IIZTWulPjU/cmake-build-debug/CMakeFiles/WebServer.dir
-/tmp/tmp.IIZTWulPjU/cmake-build-debug/CMakeFiles/rebuild_cache.dir
