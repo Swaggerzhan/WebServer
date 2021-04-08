@@ -1,4 +1,4 @@
-/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/usr/bin/cmake -DCMAKE_C_COMPILER=/usr/bin/gcc-7 -DCMAKE_CXX_COMPILER=/usr/bin/g++-7 -G "CodeBlocks - Unix Makefiles" /tmp/tmp.lGJb5QMYLR
+/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/usr/bin/make -DCMAKE_C_COMPILER=/usr/bin/gcc-7 -DCMAKE_CXX_COMPILER=/usr/bin/g++-7 -G "CodeBlocks - Unix Makefiles" /tmp/tmp.IIZTWulPjU
 -- Configuring done
 -- Generating done
--- Build files have been written to: /tmp/tmp.lGJb5QMYLR/cmake-build-debug
+-- Build files have been written to: /tmp/tmp.IIZTWulPjU/cmake-build-debug

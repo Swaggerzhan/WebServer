@@ -1,6 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/WebServer.dir/main.cpp.o"
   "CMakeFiles/WebServer.dir/TEST/DI.cpp.o"
+  "CMakeFiles/WebServer.dir/TEST/threadPool.cpp.o"
   "WebServer.pdb"
   "WebServer"
 )
