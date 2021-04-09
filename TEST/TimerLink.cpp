@@ -44,7 +44,11 @@ void addsig(int sig){
 
 
 void sig_handler(int sig){
-    timerLink->tick();
+    cout << "testNumber: " << testNumber << endl;
+    cout << "sa_handler...." << endl;
+    cout << &timerLink << endl;
+    cout << "timer head endl" << endl;
+    timerLink.tick();
     alarm(TIMESLOT);
 }
 
@@ -119,12 +123,13 @@ bool TimerLink::addTimer(TimerNode* target) {
 
 void TimerLink::tick() {
     cout << "tick函数调用不可访问head" << endl;
-    if (!head)
-        return;
+//    if (!head)
+//        return;
     cout << "tick!!!!!!!!" << endl;
     time_t curTime = time(nullptr);
     cout << "curTime" << endl;
     TimerNode* tmpNode = head;
+    cout << tmpNode << endl;
     cout << "got head" << endl;
     while (tmpNode != nullptr){
         /* 如果时间还未到，直接返回 */

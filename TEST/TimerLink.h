@@ -108,6 +108,7 @@ public:
 };
 
 
-static TimerLink* timerLink;
+static TimerLink timerLink;
+static int testNumber = 97;
 
 #endif //WEBSERVER_TIMERLINK_H

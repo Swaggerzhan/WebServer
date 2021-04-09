@@ -9,7 +9,7 @@ int main() {
 
     /* 注册信号函数 */
     addsig(SIGALRM);
-    timerLink = new TimerLink();
+    //timerLink = new TimerLink();
 
     srand(time(nullptr));
     TimerNode* timerNode;
@@ -23,7 +23,7 @@ int main() {
         timerNode->data = new WorkData(i);
         cout << "即将添加节点" << endl;
         /* 添加节点 */
-        timerLink->addTimer(timerNode);
+        timerLink.addTimer(timerNode);
     }
     cout << "end loop" << endl;
 
