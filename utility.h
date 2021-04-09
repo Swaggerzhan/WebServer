@@ -6,6 +6,10 @@
 #define WEBSERVER_UTILITY_H
 
 
+
+/* vscode报错，暂时这样修改 */
+#define nullptr NULL
+#define TIMESLOT 1
 #define HOST 0.0.0.0
 #define PORT 8080
 #define OPENMAX 65537

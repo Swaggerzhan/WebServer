@@ -4,6 +4,61 @@
 
 #include "TimerLink.h"
 
+
+
+
+
+void TimerTest(){
+
+    /* 注册信号函数 */
+    addsig(SIGALRM);
+
+    srand(time(nullptr));
+    TimerNode* timerNode;
+    cout << 1 << endl;
+    for (int i=0; i<10; i++){
+        timerNode = new TimerNode;
+        cout << "new TimerNode" << endl;
+        timerNode->call_back = call_back;
+        time_t cur = time(nullptr);
+        timerNode->expire = cur + (TIMESLOT * rand() % 10);
+        timerNode->data = new WorkData(i);
+        /* 添加节点 */
+        timerLink.addTimer(timerNode);
+    }
+    cout << "end loop" << endl;
+
+    alarm(TIMESLOT);
+
+}
+
+
+
+void addsig(int sig){
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = sig_handler;
+    sa.sa_flags |= SA_RESTART;
+    sigfillset( &sa.sa_mask );
+    assert( sigaction(sig, &sa, nullptr) != -1 );
+}
+
+
+
+void sig_handler(int sig){
+    timerLink.tick();
+    alarm(TIMESLOT);
+}
+
+
+
+
+void call_back(WorkData* workData){
+    cout << "workid: "<< workData->workId << "call_back called..." << endl;
+}
+
+
+
 TimerLink::TimerLink() {
     head = nullptr;
     tail = nullptr;
@@ -16,7 +71,7 @@ TimerNode::TimerNode() {
 
 
 bool TimerLink::addTimer(TimerNode* target) {
-    if (head == tail == nullptr) {
+    if (head  == nullptr) {
         head = tail = target;
         return true;
     }

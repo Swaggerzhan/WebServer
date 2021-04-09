@@ -1,10 +1,16 @@
 #include <iostream>
+#include <sys/poll.h>
 
-#include "TEST/threadPool.h"
+#include "TEST/TimerLink.h"
+
+
 
 int main() {
 
-    threadPoolMain();
-
+    // threadPoolMain();
+    TimerTest();
+    std::cout << "TimerTest end..." << std::endl;
+    while(1)
+        poll(nullptr, 0, 5);
 
 }

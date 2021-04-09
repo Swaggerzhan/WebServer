@@ -7,14 +7,52 @@
 
 #include <signal.h>
 #include <ctime>
+#include <cstdlib>
+#include <cstring>
+#include <cassert>
 #include <sys/unistd.h>
+#include "../utility.h"
+#include <iostream>
 
 
+using std::cout;
+using std::endl;
+
+
+struct WorkData;
+
+
+/**
+ *  测试总函数 
+ **/
 void TimerTest();
+
+
+/**
+ * 封装后的信号注册
+ **/
+void addsig(int sig);
+
+
+/**
+ *  信号注册函数
+ **/ 
+void sig_handler(int sig);
+
+
+/*
+** 回调函数
+*/
+void call_back(WorkData *);
 
 
 struct WorkData{
     int workTime;
+    int workId;
+
+    WorkData(int workId){
+        workId = workId;
+    };
 };
 class TimerLink;
 class TimerNode;
@@ -25,7 +63,7 @@ public:
     TimerNode();
 
     time_t expire; /* 超时时间(绝对时间) */
-    void *(call_back)(void*); /* 超时时的回调函数 */
+    void (*call_back)(WorkData*); /* 超时时的回调函数 */
     WorkData* data;
     TimerNode* pre;
     TimerNode* next;
@@ -68,5 +106,7 @@ public:
 
 };
 
+
+static TimerLink timerLink;
 
 #endif //WEBSERVER_TIMERLINK_H
