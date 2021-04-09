@@ -22,6 +22,7 @@ using std::endl;
 struct WorkData;
 
 
+
 /**
  *  测试总函数 
  **/
@@ -74,7 +75,7 @@ public:
 
 class TimerLink {
 
-private:
+public:
     TimerNode* head;
     TimerNode* tail;
 
@@ -107,6 +108,6 @@ public:
 };
 
 
-static TimerLink timerLink;
+static TimerLink* timerLink;
 
 #endif //WEBSERVER_TIMERLINK_H

@@ -13,23 +13,21 @@ void TimerTest(){
     /* 注册信号函数 */
     addsig(SIGALRM);
 
-    srand(time(nullptr));
-    TimerNode* timerNode;
-    cout << 1 << endl;
-    for (int i=0; i<10; i++){
-        timerNode = new TimerNode;
-        cout << "new TimerNode" << endl;
-        timerNode->call_back = call_back;
-        time_t cur = time(nullptr);
-        timerNode->expire = cur + (TIMESLOT * rand() % 10);
-        timerNode->data = new WorkData(i);
-        /* 添加节点 */
-        timerLink.addTimer(timerNode);
-    }
-    cout << "end loop" << endl;
-
-    alarm(TIMESLOT);
-
+//    srand(time(nullptr));
+//    TimerNode* timerNode;
+//    cout << 1 << endl;
+//    for (int i=0; i<10; i++){
+//        timerNode = new TimerNode;
+//        cout << "new TimerNode" << endl;
+//        timerNode->call_back = call_back;
+//        time_t cur = time(nullptr);
+//        timerNode->expire = cur + (TIMESLOT * rand() % 10);
+//        timerNode->data = new WorkData(i);
+//        /* 添加节点 */
+//        timerLink.addTimer(timerNode);
+//    }
+//    cout << "end loop" << endl;
+//    alarm(TIMESLOT);
 }
 
 
@@ -46,7 +44,7 @@ void addsig(int sig){
 
 
 void sig_handler(int sig){
-    timerLink.tick();
+    timerLink->tick();
     alarm(TIMESLOT);
 }
 
@@ -54,7 +52,8 @@ void sig_handler(int sig){
 
 
 void call_back(WorkData* workData){
-    cout << "workid: "<< workData->workId << "call_back called..." << endl;
+    //cout << "workId: "<< workData->workId << "call_back called..." << endl;
+    cout << "call_back end..." << endl;
 }
 
 
@@ -77,36 +76,67 @@ bool TimerLink::addTimer(TimerNode* target) {
     }
     TimerNode* preNode;
     TimerNode* tmpNode = head;
-    while (tmpNode != nullptr && target->expire > tmpNode->expire){
+//    while (tmpNode != nullptr && target->expire > tmpNode->expire){
+//        preNode = tmpNode;
+//        tmpNode = tmpNode->next;
+//    }
+//
+//    /* 需要将其加入到尾部 */
+//    if (tmpNode == nullptr){
+//        preNode->next = target;
+//        target->pre = preNode;
+//        tail = target;
+//    }else {/* 加入到preNode和tmpNode之间 */
+//        target->next = tmpNode;
+//        tmpNode->pre = target;
+//        preNode->next = target;
+//        target->pre = preNode;
+//    }
+
+    while ( tmpNode != nullptr ){
+        if ( target->expire < tmpNode->expire){
+            preNode->next = target;
+            target->next = tmpNode;
+            tmpNode->pre = target;
+            target->pre = preNode;
+            break;
+        }
         preNode = tmpNode;
         tmpNode = tmpNode->next;
     }
 
-    /* 需要将其加入到尾部 */
-    if (tmpNode == nullptr){
+    if ( tmpNode == nullptr){
         preNode->next = target;
         target->pre = preNode;
+        target->next = nullptr;
         tail = target;
-    }else {/* 加入到preNode和tmpNode之间 */
-        target->next = tmpNode;
-        tmpNode->pre = target;
-        preNode->next = target;
-        target->pre = preNode;
     }
+
+
     return true;
 }
 
 
 void TimerLink::tick() {
+    cout << "tick函数调用不可访问head" << endl;
+    if (!head)
+        return;
+    cout << "tick!!!!!!!!" << endl;
     time_t curTime = time(nullptr);
+    cout << "curTime" << endl;
     TimerNode* tmpNode = head;
+    cout << "got head" << endl;
     while (tmpNode != nullptr){
         /* 如果时间还未到，直接返回 */
+        cout << "while" << endl;
         if (tmpNode->expire > curTime )
             return;
         /* 超时，调回调函数处理 */
+        cout << "回调函数调用。。。。" << endl;
         tmpNode->call_back(tmpNode->data);
+        cout << "going call delTimer..." << endl;
         delTimer(tmpNode); // delete node
+        cout << "delete node" << endl;
         tmpNode = tmpNode->next;
     }
 }
