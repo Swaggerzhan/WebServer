@@ -37,6 +37,8 @@ void addsig(int sig){
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = sig_handler;
     sa.sa_flags |= SA_RESTART;
+    /* 开启信号传参 */
+    sa.sa_flags |= SA_SIGINFO;
     sigfillset( &sa.sa_mask );
     assert( sigaction(sig, &sa, nullptr) != -1 );
 }
@@ -44,11 +46,8 @@ void addsig(int sig){
 
 
 void sig_handler(int sig){
-    cout << "testNumber: " << testNumber << endl;
-    cout << "sa_handler...." << endl;
-    cout << &timerLink << endl;
-    cout << "timer head endl" << endl;
-    timerLink.tick();
+    //void* test = (void*)((*info).si_ptr);
+    timerLink->tick();
     alarm(TIMESLOT);
 }
 
@@ -78,43 +77,49 @@ bool TimerLink::addTimer(TimerNode* target) {
         head = tail = target;
         return true;
     }
-    TimerNode* preNode;
+    TimerNode* preNode = nullptr;
     TimerNode* tmpNode = head;
-//    while (tmpNode != nullptr && target->expire > tmpNode->expire){
-//        preNode = tmpNode;
-//        tmpNode = tmpNode->next;
-//    }
-//
-//    /* 需要将其加入到尾部 */
-//    if (tmpNode == nullptr){
-//        preNode->next = target;
-//        target->pre = preNode;
-//        tail = target;
-//    }else {/* 加入到preNode和tmpNode之间 */
-//        target->next = tmpNode;
-//        tmpNode->pre = target;
-//        preNode->next = target;
-//        target->pre = preNode;
-//    }
-
-    while ( tmpNode != nullptr ){
-        if ( target->expire < tmpNode->expire){
-            preNode->next = target;
-            target->next = tmpNode;
-            tmpNode->pre = target;
-            target->pre = preNode;
-            break;
-        }
+    while (tmpNode != nullptr && target->expire > tmpNode->expire){
         preNode = tmpNode;
         tmpNode = tmpNode->next;
     }
 
-    if ( tmpNode == nullptr){
+    /* 需要加入头部 */
+    if (tmpNode == head){
+        head = target;
+        target->next = tmpNode;
+        tmpNode->pre = target;
+    }
+    /* 需要将其加入到尾部 */
+    else if (tmpNode == nullptr){
         preNode->next = target;
         target->pre = preNode;
-        target->next = nullptr;
         tail = target;
+    }else {/* 加入到preNode和tmpNode之间 */
+        target->next = tmpNode;
+        tmpNode->pre = target;
+        preNode->next = target;
+        target->pre = preNode;
     }
+
+//    while ( tmpNode != nullptr ){
+//        if ( target->expire < tmpNode->expire){
+//            preNode->next = target;
+//            target->next = tmpNode;
+//            tmpNode->pre = target;
+//            target->pre = preNode;
+//            break;
+//        }
+//        preNode = tmpNode;
+//        tmpNode = tmpNode->next;
+//    }
+//
+//    if ( tmpNode == nullptr){
+//        preNode->next = target;
+//        target->pre = preNode;
+//        target->next = nullptr;
+//        tail = target;
+//    }
 
 
     return true;
@@ -122,32 +127,30 @@ bool TimerLink::addTimer(TimerNode* target) {
 
 
 void TimerLink::tick() {
-    cout << "tick函数调用不可访问head" << endl;
-//    if (!head)
-//        return;
-    cout << "tick!!!!!!!!" << endl;
+    printf("tick..\n");
     time_t curTime = time(nullptr);
-    cout << "curTime" << endl;
+    /* 尝试去获取头节点 */
     TimerNode* tmpNode = head;
-    cout << tmpNode << endl;
-    cout << "got head" << endl;
     while (tmpNode != nullptr){
         /* 如果时间还未到，直接返回 */
-        cout << "while" << endl;
-        if (tmpNode->expire > curTime )
+        if (tmpNode->expire > curTime ) {
             return;
+        }
         /* 超时，调回调函数处理 */
-        cout << "回调函数调用。。。。" << endl;
         tmpNode->call_back(tmpNode->data);
-        cout << "going call delTimer..." << endl;
-        delTimer(tmpNode); // delete node
-        cout << "delete node" << endl;
-        tmpNode = tmpNode->next;
+//        /* sb操作，麻了 */
+//        delTimer(tmpNode); // delete node
+//        tmpNode = tmpNode->next;
+        head = tmpNode->next;
+        delete tmpNode;
+        tmpNode = head;
+        checkLink();
     }
 }
 
 
 void TimerLink::delTimer(TimerNode *target) {
+    checkLink();
     /* 头节点的话直接清空链表 */
     if (target == head){
         delete target;
@@ -169,3 +172,17 @@ void TimerLink::delTimer(TimerNode *target) {
     delete target;
 
 }
+
+
+void TimerLink::checkLink() {
+    TimerNode* tmpNode = head;
+    int count = 0;
+    while(tmpNode != nullptr){
+        tmpNode = tmpNode->next;
+        count++;
+    }
+    cout << "total Node: " << count << endl;
+}
+
+TimerLink *timerLink;
+int mainValue = 95;

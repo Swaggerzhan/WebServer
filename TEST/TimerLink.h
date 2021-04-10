@@ -18,6 +18,8 @@
 using std::cout;
 using std::endl;
 
+extern int mainValue;
+
 
 struct WorkData;
 
@@ -104,11 +106,13 @@ public:
      */
     void delTimer(TimerNode* target);
 
+    void checkLink();
+
 
 };
 
 
-static TimerLink timerLink;
-static int testNumber = 97;
+extern TimerLink *timerLink;
+volatile static int testNumber = 97;
 
 #endif //WEBSERVER_TIMERLINK_H

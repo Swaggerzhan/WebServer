@@ -9,6 +9,8 @@ project(WebServer)
 
 set(CMAKE_CXX_STANDARD 14)
 
+set(CMAKE_BUILD_TYPE DEBUG)
+
 
 
 add_executable(WebServer main.cpp HTTP/HttpHandler.h 
