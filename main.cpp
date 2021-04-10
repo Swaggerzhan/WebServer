@@ -1,35 +1,34 @@
 #include <iostream>
 #include <sys/poll.h>
 
-#include "TEST/TimerLink.h"
+#include "Timer/TimerHeap.h"
 
 
 
 
 int main() {
 
-    cout << "mainValue: " << mainValue << endl;
-    timerLink = new TimerLink();
-    /* 注册信号函数 */
-    addsig(SIGALRM);
-    //timerLink = new TimerLink();
+    /*函数注册*/
+    addSig(SIGALRM);
 
+    int n = 20;
+    timer = new TimerHeap;
     srand(time(nullptr));
-    TimerNode* timerNode;
-    cout << 1 << endl;
-    for (int i=0; i<10; i++){
-        timerNode = new TimerNode;
-        timerNode->call_back = call_back;
-        time_t cur = time(nullptr);
-        timerNode->expire = cur + (TIMESLOT * rand() % 10);
-        timerNode->data = new WorkData(i);
-        /* 添加节点 */
-        timerLink->addTimer(timerNode);
+    TimerNode* tmpNode;
+    for (int i=0; i<n; i++){
+        time_t expire_time = time(nullptr)+(TIMESLOT*(rand()%20));
+        tmpNode = new TimerNode(expire_time, i);
+        tmpNode->call_bak = call_back;
+        /* 时间节点加入 */
+        timer->insert(tmpNode);
     }
-    timerLink->checkLink();
+    printf("节点添加完成");
+
     alarm(TIMESLOT);
-    std::cout << "TimerTest end..." << std::endl;
+
     while(1)
         poll(nullptr, 0, 5);
+
+
 
 }

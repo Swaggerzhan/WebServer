@@ -6,6 +6,7 @@
 #define WEBSERVER_TIMERLINK_H
 
 #include <signal.h>
+#include <sys/poll.h>
 #include <ctime>
 #include <cstdlib>
 #include <cstring>
