@@ -19,6 +19,7 @@ add_executable(WebServer main.cpp HTTP/HttpHandler.h
     TEST/threadPool.cpp
     Timer/TimerHeap.h Timer/TimerHeap.cpp
         TEST/PointerSwap.h
+        Process/ProcessPool.cpp Process/ProcessPool.h
     )
 
 find_package(Threads)
