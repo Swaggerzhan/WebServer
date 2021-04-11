@@ -10,7 +10,7 @@
 /* vscode报错，暂时这样修改 */
 #define TIMESLOT 1
 #define HOST "0.0.0.0"
-#define PORT 8080
+#define PORT 8000
 #define OPENMAX 65537
 
 

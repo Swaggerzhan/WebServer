@@ -6,13 +6,26 @@
 
 
 
+ProcessPool* ProcessPool::instance;
+int ProcessPool::m_process_max;
+int ProcessPool::demo;
+Process** ProcessPool::m_process_list;
+int ProcessPool::maxOpen;
+int ProcessPool::epfd;
+epoll_event* ProcessPool::epollArray;
+bool ProcessPool::m_stop;
+int ProcessPool::m_idx;
+
+Process::Process() {}
 
 
 
-ProcessPool* ProcessPool::getPool(int max_process, int demo) {
+
+
+ProcessPool* ProcessPool::getPool(int max_process, int demo_sock) {
     if ( instance )
         return instance;
-    return (instance = new ProcessPool(max_process, demo));
+    return (instance = new ProcessPool(max_process, demo_sock));
 }
 
 
@@ -36,6 +49,7 @@ ProcessPool::ProcessPool(int max_process, int demo_socket) {
             break; // 子进程中不需要循环，直接结束即可
         }else {
             /* 父进程中 */
+            m_idx = -1;
             close(m_process_list[i]->pipe[1]);
             continue; // 继续创建进程
         }
@@ -44,7 +58,7 @@ ProcessPool::ProcessPool(int max_process, int demo_socket) {
 }
 
 
-void ProcessPool::RUN(int idx) {
+void ProcessPool::RUN() {
     if (m_idx == -1){
         /* 父进程中 */
         run_father();
@@ -58,7 +72,7 @@ void ProcessPool::run_father() {
 
     //注册信号和开启epoll
     setup_sig_pipe();
-
+    printf("father process running...\n");
     /* 父进程貌似可以什么都不做，直接通知子进程去accept即可 */
     epollArray = new epoll_event[10];
     epoll_event event;
@@ -110,7 +124,7 @@ void ProcessPool::run_father() {
                             /* 如果所有的子进程都退出了，那父进程也退出 */
                             m_stop = true;
                             for (int j=0; j<m_process_max; j++){
-                                if (m_process_list[i] != -1)
+                                if (m_process_list[i]->m_idx != -1)
                                     m_stop = false;
                             }
                             break;
@@ -140,6 +154,8 @@ void ProcessPool::run_father() {
 
 
 void ProcessPool::run_child() {
+
+    printf("child process running...\n");
 
     //注册信号和开启epoll
     setup_sig_pipe();
@@ -204,7 +220,8 @@ void ProcessPool::run_child() {
                 continue;
             }
             /* 剩下的就是客户端发来的请求了 */
-            char *buf = "hello there\n";
+            std::string data = "hello there\n";
+            const char *buf = data.data();
             send(handler_fd, buf, strlen(buf), 0);
         }
 
@@ -262,7 +279,7 @@ static void signal_handler(int sig){
 }
 
 
-static void addSignal(int sig, void (handler)(int), bool restart = true){
+static void addSignal(int sig, void (handler)(int), bool restart){
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = handler;

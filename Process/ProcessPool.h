@@ -52,7 +52,7 @@ public:
      * 进程池的获取方法
      * @return
      */
-    static ProcessPool* getPool(int max_process, int demo);
+    static ProcessPool* getPool(int max_process, int demo_sock);
 
 
     static void setup_sig_pipe();
@@ -61,7 +61,7 @@ public:
     /**
      * 进程池启动函数
      */
-    void RUN(int idx);
+    void RUN();
 
 
 public:
