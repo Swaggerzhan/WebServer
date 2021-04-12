@@ -12,7 +12,7 @@ int main() {
     struct sockaddr_in local_addr;
     memset(&local_addr, 0, sizeof(local_addr));
     local_addr.sin_addr.s_addr = inet_addr("0.0.0.0");
-    local_addr.sin_port = 7999;
+    local_addr.sin_port = htons(7999);
     local_addr.sin_family = AF_INET;
     /* 设置重复使用地址便于测试 */
     int reuse = 1;
@@ -27,9 +27,17 @@ int main() {
         printf("listen() error!\n");
         exit(1);
     }
-
-    ProcessPool* pool = ProcessPool::getPool(2, demo);
+    printf("network init ok!\n");
+    ProcessPool* pool = ProcessPool::getPool(1, demo);
     pool->RUN();
+//    struct sockaddr_in client_addr;
+//    socklen_t client_addr_sz;
+//    int client_sock = accept(demo, (sockaddr*)&client_addr, &client_addr_sz);
+//    std::string data = "hello client..\n";
+//    const char *buf1 = data.data();
+//    send(client_sock, buf1, strlen(buf1), 0);
+//    close(client_sock);
+//    close(demo);
 
 
 }
