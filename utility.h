@@ -11,7 +11,7 @@
 #define TIMESLOT 1
 #define HOST "0.0.0.0"
 #define PORT 8000
-#define OPENMAX 65537
+#define OPENMAX 20000
 
 
 enum CHECK_STATUS{
