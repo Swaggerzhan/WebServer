@@ -20,7 +20,7 @@ add_executable(WebServer main.cpp HTTP/HttpHandler.h
     Timer/TimerHeap.h Timer/TimerHeap.cpp
         TEST/PointerSwap.h
         Process/ProcessPool.h Process/ProcessPool.cpp
-        )
+        TEST/TestProcess.h TEST/TestProcess.cpp )
 
 find_package(Threads)
 target_link_libraries(WebServer ${CMAKE_THREAD_LIBS_INIT})
