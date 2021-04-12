@@ -14,13 +14,14 @@ set(CMAKE_BUILD_TYPE DEBUG)
 
 
 add_executable(WebServer main.cpp HTTP/HttpHandler.h 
-    utility.h BASE/Tree.h Server/Demo.h TEST/thread_test.h 
-    TEST/threadPool.h TEST/DI.h TEST/DI.cpp 
-    TEST/threadPool.cpp
+    utility.h BASE/Tree.h Server/Demo.h TEST/thread_test.h
+        TEST/DI.h TEST/DI.cpp
     Timer/TimerHeap.h Timer/TimerHeap.cpp
         TEST/PointerSwap.h
         Process/ProcessPool.h Process/ProcessPool.cpp
-        TEST/TestProcess.h TEST/TestProcess.cpp )
+        Thread/ThreadPool.h Thread/ThreadPool.cpp
+        HTTP/Request.h HTTP/Request.cpp
+        )
 
 find_package(Threads)
 target_link_libraries(WebServer ${CMAKE_THREAD_LIBS_INIT})

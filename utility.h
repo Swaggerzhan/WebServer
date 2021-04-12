@@ -7,11 +7,12 @@
 
 
 
-/* vscode报错，暂时这样修改 */
+
 #define TIMESLOT 1
 #define HOST "0.0.0.0"
 #define PORT 8000
 #define OPENMAX 20000
+#define BUFSIZE 2048
 
 
 enum CHECK_STATUS{
@@ -35,6 +36,7 @@ enum HTTP_CODE{
     CLOSED_CONNECTION,
     INCOMPLETE_REQUEST,
 };
+
 
 
 
