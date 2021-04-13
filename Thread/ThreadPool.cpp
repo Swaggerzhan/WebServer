@@ -12,6 +12,7 @@ int ThreadPool::m_thread_num;
 ThreadZ** ThreadPool::m_list;
 pthread_mutex_t ThreadPool::lock;
 ThreadPool* ThreadPool::instance;
+std::queue<Request*> ThreadPool::requestLine;
 
 
 
@@ -31,7 +32,9 @@ ThreadPool::ThreadPool(int thread_number) {
     /* 开始创建线程，并且加入线程池 */
     for (int i=0; i<m_thread_num; ++i){
         m_list[i] = new ThreadZ(i);
-        int ret = pthread_create(&m_list[i]->pthread_id, nullptr, ThreadZ::work, (void*)instance);
+        /* instance可能为空？线程池还未初始化! */
+        /* 传入this可以解决这个问题，this总是指向事例的首地址！ */
+        int ret = pthread_create(&m_list[i]->pthread_id, nullptr, ThreadZ::work, (void*)this);
         if (ret < 0){
             printf("pthread_create() error!\n");
             printf("%s\n", strerror(errno));
@@ -57,12 +60,12 @@ void ThreadPool::run() {
     while( !t_stop ){
         /* 尝试上锁 */
         if (pthread_mutex_trylock(&lock) != 0)
-            return;
+            continue;
         Request* w = requestLine.front();
         /*  如果其中是空的，则直接释放锁，不做任何事情 */
         if (w == nullptr){
             pthread_mutex_unlock(&lock);
-            return;
+            continue;
         }
         /* 队列不空，弹出队头，处理 */
         requestLine.pop();
@@ -92,7 +95,7 @@ static int setNonBlock(int fd){
 }
 
 
-static void addFd(int epfd, int sock){
+void addFd(int epfd, int sock){
     epoll_event event{};
     event.data.fd = sock;
     event.events = EPOLLIN | EPOLLET;

@@ -58,14 +58,15 @@ int main(){
     printf("network init ok!\n");
 
     /* 获取线程池 */
-    ThreadPool* pool = ThreadPool::getPool(4);
-
+    ThreadPool* pool = ThreadPool::getPool(1);
+    printf("pool ok\n");
 
     int epfd = epoll_create(5);
     epoll_event *eventArray;
     eventArray = new epoll_event[OPENMAX];
 
     addFd(epfd, demo);
+
     while( true ){
         int ret = epoll_wait(epfd, eventArray, OPENMAX, 0);
         if (ret < 0){
@@ -86,12 +87,13 @@ int main(){
                     printf("%s\n", strerror(errno));
                     continue;
                 }
+                printf("new client connection!\n");
                 /* 将新用户加入到epoll监听端口中去 */
                 addFd(epfd, clientFd);
             } else {
                 /* 用户发起请求，主线程只是将其加入到队列中去 */
                 Request* request = new Request(handler_fd);
-                ThreadPool::append(request);
+                while (!ThreadPool::append(request)){}
                 continue;
             }
         }
