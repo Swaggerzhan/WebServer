@@ -31,7 +31,7 @@ private:
     /**
      * 线程池
      */
-    ThreadPool(int);
+    ThreadPool(int, int);
 
 public:
 
@@ -40,7 +40,7 @@ public:
      * 传入线程数量
      * @return
      */
-    static ThreadPool* getPool(int);
+    static ThreadPool* getPool(int, int);
 
     /**
      * 向队列中添加工作事项
@@ -61,6 +61,9 @@ public:
 
     /* 线程池总数量 */
     static int m_thread_num;
+
+    /* epoll监听 */
+    static int epfd;
 
     /* 线程池数组 */
     static ThreadZ** m_list;

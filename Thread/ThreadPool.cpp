@@ -13,20 +13,22 @@ ThreadZ** ThreadPool::m_list;
 pthread_mutex_t ThreadPool::lock;
 ThreadPool* ThreadPool::instance;
 std::queue<Request*> ThreadPool::requestLine;
+int ThreadPool::epfd;
 
 
 
-ThreadPool * ThreadPool::getPool(int thread_number) {
+ThreadPool * ThreadPool::getPool(int epoll_fd, int thread_number) {
     if (instance)
         return instance;
-    instance = new ThreadPool(thread_number);
+    instance = new ThreadPool(epoll_fd, thread_number);
     return instance;
 }
 
 
-ThreadPool::ThreadPool(int thread_number) {
+ThreadPool::ThreadPool(int epoll_fd, int thread_number) {
     m_thread_num = thread_number;
     lock = PTHREAD_MUTEX_INITIALIZER;
+    epfd = epoll_fd;
     /* 声明指针数组所需要的空间 */
     m_list = new ThreadZ*[m_thread_num];
     /* 开始创建线程，并且加入线程池 */
@@ -70,7 +72,11 @@ void ThreadPool::run() {
         /* 队列不空，弹出队头，处理 */
         requestLine.pop();
         pthread_mutex_unlock(&lock);
-        w->process();
+        int code = w->process();
+        if (code == 0){
+            removeFd(epfd, w->fd);
+            delete w;
+        }
     }
 }
 

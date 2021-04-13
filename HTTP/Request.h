@@ -16,7 +16,7 @@ public:
 
     int fd;
 
-    char buf[BUFSIZE];
+    char *buf;
 
 public:
 
@@ -25,10 +25,12 @@ public:
      */
     Request(int fd);
 
+    ~Request();
+
     /**
      * 请求处理方法
      */
-    void process();
+    int process();
 };
 
 
