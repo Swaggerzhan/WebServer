@@ -13,6 +13,7 @@
 #include <arpa/inet.h>
 #include <sys/epoll.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <queue>
 #include <fcntl.h>
 #include <cstring>
@@ -70,6 +71,9 @@ public:
 
     /* 访问队列所需要的锁 */
     static pthread_mutex_t lock;
+
+    /* 信号量 */
+    static sem_t sem_lock;
 
     /* 线程池实例 */
     static ThreadPool* instance;

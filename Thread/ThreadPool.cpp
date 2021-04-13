@@ -14,6 +14,7 @@ pthread_mutex_t ThreadPool::lock;
 ThreadPool* ThreadPool::instance;
 std::queue<Request*> ThreadPool::requestLine;
 int ThreadPool::epfd;
+sem_t ThreadPool::sem_lock;
 
 
 
@@ -28,6 +29,7 @@ ThreadPool * ThreadPool::getPool(int epoll_fd, int thread_number) {
 ThreadPool::ThreadPool(int epoll_fd, int thread_number) {
     m_thread_num = thread_number;
     lock = PTHREAD_MUTEX_INITIALIZER;
+    sem_init(&sem_lock, 0, 0);
     epfd = epoll_fd;
     /* 声明指针数组所需要的空间 */
     m_list = new ThreadZ*[m_thread_num];
@@ -48,38 +50,69 @@ ThreadPool::ThreadPool(int epoll_fd, int thread_number) {
 
 }
 
+/* 互斥锁版本 */
+//bool ThreadPool::append(Request *request) {
+//    if (pthread_mutex_trylock(&lock) != 0 )
+//        return false;
+//    requestLine.push(request);
+//    pthread_mutex_unlock(&lock);
+//    return true;
+//}
 
 bool ThreadPool::append(Request *request) {
-    if (pthread_mutex_trylock(&lock) != 0 )
-        return false;
+    if ( pthread_mutex_lock(&lock) != 0){
+        printf("pthread_mutex_lock() error!\n");
+        exit(1);
+    }
     requestLine.push(request);
     pthread_mutex_unlock(&lock);
+    sem_post(&sem_lock);
     return true;
 }
 
-
-void ThreadPool::run() {
-    while( !t_stop ){
-        /* 尝试上锁 */
-        if (pthread_mutex_trylock(&lock) != 0)
-            continue;
-        Request* w = requestLine.front();
-        /*  如果其中是空的，则直接释放锁，不做任何事情 */
-        if (w == nullptr){
-            pthread_mutex_unlock(&lock);
-            continue;
+/* 互斥锁版本 */
+//void ThreadPool::run() {
+//    while( !t_stop ){
+//        /* 尝试上锁 */
+//        if (pthread_mutex_trylock(&lock) != 0)
+//            continue;
+//        Request* w = requestLine.front();
+//        /*  如果其中是空的，则直接释放锁，不做任何事情 */
+//        if (w == nullptr){
+//            pthread_mutex_unlock(&lock);
+//            continue;
+//        }
+//        /* 队列不空，弹出队头，处理 */
+//        requestLine.pop();
+//        pthread_mutex_unlock(&lock);
+//        int code = w->process();
+//        if (code == 0){
+//            removeFd(epfd, w->fd);
+//            delete w;
+//        }
+//    }
+//}
+void ThreadPool::run(){
+    while ( !t_stop ){
+        /* -1操作 */
+        if (sem_wait(&sem_lock) != 0){
+            printf("sem_wait() error!\n");
+            exit(1);
         }
-        /* 队列不空，弹出队头，处理 */
+        /* 上锁操作 */
+        pthread_mutex_lock(&lock);
+        Request* w = requestLine.front();
         requestLine.pop();
         pthread_mutex_unlock(&lock);
+        /* 解锁 */
         int code = w->process();
-        if (code == 0){
+        if ( code == 0 ){
             removeFd(epfd, w->fd);
             delete w;
         }
+
     }
 }
-
 
 
 void* ThreadZ::work(void *arg) {
