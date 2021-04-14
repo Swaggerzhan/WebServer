@@ -8,6 +8,10 @@
 #include "../utility.h"
 #include <sys/socket.h>
 #include <cstring>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <iostream>
 
 
@@ -17,6 +21,8 @@ public:
     int fd;
 
     char *buf;
+
+    static char* index_buf;
 
 public:
 
@@ -31,6 +37,11 @@ public:
      * 请求处理方法
      */
     int process();
+
+    /**
+     * 将index.html载入内存
+     */
+    static void bufInit();
 };
 
 

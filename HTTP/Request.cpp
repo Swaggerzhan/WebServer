@@ -5,9 +5,21 @@
 #include "Request.h"
 
 
+char* Request::index_buf;
+
 Request::Request(int fd) {
     this->fd = fd;
     buf = new char[BUFSIZE];
+
+
+}
+
+
+void Request::bufInit() {
+    index_buf = new char[BUFSIZE];
+    int index_fd = open("../index/index.html", O_RDONLY);
+    read(index_fd, index_buf, BUFSIZE);
+    close(index_fd);
 }
 
 
@@ -31,12 +43,9 @@ int Request::process() {
         return 0;
     }
 
-
-    /* 以下是数据模拟 */
-    char retData[] = "hello client\n";
     //printf("sending back data!\n");
-    int len = strlen(retData);
-    if (len != send(fd, retData, len, 0)){
+    int len = strlen(index_buf);
+    if (len != send(fd, index_buf, len, 0)){
         printf("send() error!\n");
         printf("%s\n", strerror(errno));
         return -1;

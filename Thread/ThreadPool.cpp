@@ -99,6 +99,7 @@ void ThreadPool::run(){
             printf("sem_wait() error!\n");
             exit(1);
         }
+        printf("stack was doing nothing!\n");
         /* 上锁操作 */
         pthread_mutex_lock(&lock);
         Request* w = requestLine.front();
@@ -106,10 +107,12 @@ void ThreadPool::run(){
         pthread_mutex_unlock(&lock);
         /* 解锁 */
         int code = w->process();
-        if ( code == 0 ){
-            removeFd(epfd, w->fd);
-            delete w;
-        }
+//        if ( code == 0 ){
+//            removeFd(epfd, w->fd);
+//            delete w;
+//        }
+        removeFd(epfd, w->fd);
+        delete w;
 
     }
 }
@@ -138,6 +141,7 @@ void addFd(int epfd, int sock){
     epoll_event event{};
     event.data.fd = sock;
     event.events = EPOLLIN | EPOLLET;
+    event.events = EPOLLIN;
     epoll_ctl(epfd, EPOLL_CTL_ADD, sock, &event);
     setNonBlock(sock);
 }

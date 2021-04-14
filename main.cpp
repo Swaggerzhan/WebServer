@@ -66,9 +66,13 @@ int main(){
     eventArray = new epoll_event[OPENMAX];
 
     addFd(epfd, demo);
+
     ThreadPool* pool = ThreadPool::getPool(epfd, 2);
+    /* index.html初始化 */
+    Request::bufInit();
     while( true ){
         int ret = epoll_wait(epfd, eventArray, OPENMAX, 0);
+        //printf("main loop\n");
         if (ret < 0){
             printf("epoll_wait() error!\n");
             printf("%s\n", strerror(errno));
@@ -93,7 +97,7 @@ int main(){
             } else {
                 /* 用户发起请求，主线程只是将其加入到队列中去 */
                 Request* request = new Request(handler_fd);
-                while (!ThreadPool::append(request)){}
+                ThreadPool::append(request);
                 continue;
             }
         }
