@@ -21,6 +21,7 @@ add_executable(WebServer main.cpp HTTP/HttpHandler.h
         Process/ProcessPool.h Process/ProcessPool.cpp
         Thread/ThreadPool.h Thread/ThreadPool.cpp
         HTTP/Request.h HTTP/Request.cpp
+        HTTP/HttpDecoder.h HTTP/HttpDecoder.cpp
         )
 
 find_package(Threads)

@@ -10,7 +10,8 @@ char* Request::index_buf;
 Request::Request(int fd) {
     this->fd = fd;
     buf = new char[BUFSIZE];
-
+    /* 解析 */
+    decoder = new HttpDecoder;
 
 }
 
@@ -23,33 +24,44 @@ void Request::bufInit() {
 }
 
 
-Request::~Request() {
+Request::~Request(){
     delete [] buf;
+    delete decoder;
 }
 
 
 int Request::process() {
-    int ret = -1;
-    /* ET模式下，一次保证将所有数据全部收起 */
-//    while((ret = recv(fd, buf+ret, BUFSIZE-ret, 0)) > 0){
-//        /* 期间有限状态机就可以顺序解析http请求了 */
-//    }
-    memset(buf, 0, BUFSIZE);
-    ret = recv(fd, buf, BUFSIZE, 0);
 
-    if (ret == 0){
-        /* 客户端关闭了链接 */
-        //printf("client close\n");
-        return 0;
-    }
+    HTTP_CODE retCode;
+    CHECK_STATUS checkStatus = CHECK_REQUEST_LINE;
+    int checked_index = 0;
+    int read_index = 0;
+    int start_line = 0;
 
-    //printf("sending back data!\n");
-    int len = strlen(index_buf);
-    if (len != send(fd, index_buf, len, 0)){
-        printf("send() error!\n");
-        printf("%s\n", strerror(errno));
-        return -1;
+    while ( true ){
+
+        int data_len = recv(fd, buf+read_index, BUFSIZE-read_index, 0);
+        if (data_len == -1){
+            printf("recv() error!\n");
+            return -1;
+        }
+        if (data_len == 0){
+            printf("client closed\n");
+            return 0;
+        }
+        read_index += data_len;
+        retCode = decoder->parse_all(buf, checkStatus, checked_index, read_index, start_line);
+        if ( retCode == INCOMPLETE_REQUEST )
+            continue;
+        if ( retCode == BAD_REQUEST )
+            return -1;
+        if ( retCode == GET_REQUEST ){
+            /* 提供GET请求服务 */
+            break;
+        }
+
+
     }
-    return 99;
+    return 1;
 
 }

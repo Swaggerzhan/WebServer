@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "../HTTP/HttpDecoder.h"
 #include <fcntl.h>
 #include <iostream>
 
@@ -23,6 +24,11 @@ public:
     char *buf;
 
     static char* index_buf;
+
+
+private:
+
+    HttpDecoder* decoder;
 
 public:
 
