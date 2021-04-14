@@ -13,11 +13,9 @@ set(CMAKE_BUILD_TYPE DEBUG)
 
 
 
-add_executable(WebServer main.cpp HTTP/HttpHandler.h 
-    utility.h BASE/Tree.h Server/Demo.h TEST/thread_test.h
-        TEST/DI.h TEST/DI.cpp
+add_executable(WebServer main.cpp
+    utility.h
     Timer/TimerHeap.h Timer/TimerHeap.cpp
-        TEST/PointerSwap.h
         Process/ProcessPool.h Process/ProcessPool.cpp
         Thread/ThreadPool.h Thread/ThreadPool.cpp
         HTTP/Request.h HTTP/Request.cpp
