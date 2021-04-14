@@ -7,18 +7,13 @@
 
 
 void addSig(int sig){
-    struct sigaction sa;
+    struct sigaction sa{};
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = sig_handler;
     sa.sa_flags |= SA_RESTART;
     sigfillset(&sa.sa_mask);
     assert( (sigaction(sig, &sa, nullptr)) != -1 );
 
-}
-
-void call_back(void* arg){
-    int *id = (int*)arg;
-    printf("id: %d 超时了\n", *id);
 }
 
 
@@ -28,10 +23,12 @@ void sig_handler(int sig){
 }
 
 
-TimerNode::TimerNode(time_t expire, int data) {
+TimerNode::TimerNode(time_t expire, Request* request) {
     this->expire = expire;
-    this->data = new int;
-    *(int*)this->data = data;
+    /* 保存用户信息 */
+    client_data = request;
+    call_bak = Request::time_out;
+
 }
 
 
@@ -116,7 +113,7 @@ void TimerHeap::tick() {
     while( isTimeOut() ){
         timerNode = pop();
         /* 调用超时回调函数，并将参数传入 */
-        timerNode->call_bak(timerNode->data);
+        timerNode->call_bak(timerNode->client_data);
         delete timerNode;
         /* timerNode->data也是指针 */
     }
@@ -134,6 +131,11 @@ bool TimerHeap::isTimeOut() {
     if (timerNode->expire < time(nullptr))
         return true;
     return false;
+}
+
+
+int TimerHeap::size() {
+    return count;
 }
 
 

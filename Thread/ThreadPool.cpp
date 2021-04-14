@@ -106,13 +106,21 @@ void ThreadPool::run(){
         requestLine.pop();
         pthread_mutex_unlock(&lock);
         /* 解锁 */
-        int code = w->process();
-//        if ( code == 0 ){
-//            removeFd(epfd, w->fd);
-//            delete w;
-//        }
-        removeFd(epfd, w->fd);
-        delete w;
+        CODE code = w->process();
+        /* 出现任何一种请求都将其删除出去 */
+        if (code == CLOSE || code == ERROR){
+            pthread_rwlock_wrlock(&global_lock); // 写锁
+            removeFd(epfd, w->fd);
+            fd_request.erase(w->fd); // 全局表中删除出去
+            delete w; // 删除request的同时其中的http解释器也会被删除
+            pthread_rwlock_unlock(&global_lock);
+            continue;
+        }
+        /* 保持长链接，只需要更新节点即可 */
+        if (code == KEEP ){
+            continue;
+        }
+
 
     }
 }

@@ -38,6 +38,12 @@ enum HTTP_CODE{
     INCOMPLETE_REQUEST,
 };
 
+enum CODE{
+    ERROR, // 错误
+    CLOSE, // 客户端关闭请求
+    KEEP, // 保持链接
+};
+
 
 
 

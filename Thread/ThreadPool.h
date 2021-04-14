@@ -18,7 +18,12 @@
 #include <fcntl.h>
 #include <cstring>
 #include "../utility.h"
-#include "../HTTP/Request.h"
+#include "../Timer/TimerHeap.h"
+#include <map>
+
+
+extern pthread_rwlock_t global_lock;
+extern std::map<int, Request*> fd_request;
 
 
 class ThreadPool;

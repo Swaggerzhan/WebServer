@@ -10,8 +10,6 @@ char* Request::index_buf;
 Request::Request(int fd) {
     this->fd = fd;
     buf = new char[BUFSIZE];
-    /* 解析 */
-    decoder = new HttpDecoder;
 
 }
 
@@ -26,11 +24,15 @@ void Request::bufInit() {
 
 Request::~Request(){
     delete [] buf;
+    if (!decoder)
+        return;
     delete decoder;
 }
 
 
-int Request::process() {
+CODE Request::process() {
+    if (!decoder)
+        decoder = new HttpDecoder;
 
     HTTP_CODE retCode;
     CHECK_STATUS checkStatus = CHECK_REQUEST_LINE;
@@ -43,18 +45,18 @@ int Request::process() {
         int data_len = recv(fd, buf+read_index, BUFSIZE-read_index, 0);
         if (data_len == -1){
             printf("recv() error!\n");
-            return -1;
+            return ERROR;
         }
         if (data_len == 0){
             printf("client closed\n");
-            return 0;
+            return CLOSE;
         }
         read_index += data_len;
         retCode = decoder->parse_all(buf, checkStatus, checked_index, read_index, start_line);
         if ( retCode == INCOMPLETE_REQUEST )
             continue;
         if ( retCode == BAD_REQUEST )
-            return -1;
+            return ERROR;
         if ( retCode == GET_REQUEST ){
             /* 提供GET请求服务 */
             break;
@@ -62,6 +64,12 @@ int Request::process() {
 
 
     }
-    return 1;
+    return KEEP;
 
+}
+
+
+void Request::time_out(void *arg) {
+    Request* request = (Request*)arg;
+    delete request;
 }

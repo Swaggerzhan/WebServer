@@ -42,12 +42,17 @@ public:
     /**
      * 请求处理方法
      */
-    int process();
+    CODE process();
 
     /**
      * 将index.html载入内存
      */
     static void bufInit();
+
+    /**
+     * 超时处理函数，删除一切数据
+     */
+    static void time_out(void *arg);
 };
 
 

@@ -13,24 +13,22 @@
 #include <unistd.h>
 #include <ctime>
 #include "../utility.h"
+#include "../HTTP/Request.h"
 
+
+
+//TODO:缺少更新定时器的方法
 
 /*
  * 信号注册函数
  * */
 void addSig(int sig);
 
-/**
- * 超时回调函数
- * @param arg
- */
-void call_back(void* arg);
 
 
 void sig_handler(int sig);
 
 class TimerNode;
-struct ClientData;
 
 /**
  * 定时器
@@ -111,20 +109,15 @@ private:
 };
 
 
-struct ClientData{
-    int fd;
-};
-
-
 class TimerNode{
 public:
 
     time_t expire; /* 超时时间 */
     void (*call_bak)(void*); /* 回调函数方法 */
-    void* data;
+    Request* client_data;/* 客户信息 */
 
 public:
-    TimerNode(time_t expire, int data);
+    TimerNode(time_t expire, Request* request);
 };
 
 
