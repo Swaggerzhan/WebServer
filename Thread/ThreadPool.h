@@ -19,11 +19,7 @@
 #include <cstring>
 #include "../utility.h"
 #include "../Timer/TimerHeap.h"
-#include <map>
 
-
-extern pthread_rwlock_t global_lock;
-extern std::map<int, Request*> fd_request;
 
 
 class ThreadPool;
@@ -77,8 +73,9 @@ public:
     /* 访问队列所需要的锁 */
     static pthread_mutex_t lock;
 
-    /* 信号量 */
-    static sem_t sem_lock;
+    /* 条件变量辅助 */
+    static pthread_cond_t line_ready;
+
 
     /* 线程池实例 */
     static ThreadPool* instance;
