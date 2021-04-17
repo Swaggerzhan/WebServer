@@ -35,6 +35,7 @@ void Request::close_conn() {
     delete [] recv_buf;
     delete [] send_buf;
     removefd(epfd, fd);
+    printf("close\n");
 }
 
 
@@ -114,10 +115,14 @@ bool Request::write(){
         }
         if ( (len == 0) && (send_index == write_index)){
             /* 响应成功，清空所有接收数据准备下次请求 */
-            init();
-            /* 重新添加到epoll中 */
+            if (keep_alive){
+                init();
+                /* 重新添加到epoll中 */
+                modfd(epfd, fd, EPOLLIN);
+                return true;
+            }
             modfd(epfd, fd, EPOLLIN);
-            return true;
+            return false;
         }
         /* 累计已写 */
         send_index += len;
@@ -375,8 +380,8 @@ void removefd(int epfd, int fd){
 
 
 int setNonBlock(int fd){
-    int old_option = fcntl(fd, F_GETFD);
+    int old_option = fcntl(fd, F_GETFL);
     int new_option = old_option | O_NONBLOCK;
-    fcntl(fd, F_SETFD, new_option);
+    fcntl(fd, F_SETFL, new_option);
     return old_option;
 }

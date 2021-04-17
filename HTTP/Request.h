@@ -6,13 +6,10 @@
 #define WEBSERVER_REQUEST_H
 
 #include "../utility.h"
-#include <sys/socket.h>
-#include <cstring>
 #include <sys/epoll.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "../HTTP/HttpDecoder.h"
 #include <fcntl.h>
 #include <iostream>
 
