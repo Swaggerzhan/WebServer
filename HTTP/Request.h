@@ -28,9 +28,11 @@ public:
 
     int fd;/* 当前request处理的客户端描述符 */
 
-    char *recv_buf; /* 收到的信息 */
+    char *recv_buf; /* 接收缓冲区 */
+    char *send_buf; /* 发送缓冲区 */
 
     // 以下是HTTP请求解析后的数据
+    bool http_recv_ok; /* http请求解析完成 */
     char *method; /* 请求方法 */
     char *url; /* 请求url */
     char *user_agent; /* 客户端使用的user_agent */
@@ -39,13 +41,17 @@ public:
     bool keep_alive; /* 头字段keep_alive */
 
     // 以下是解析HTTP请求的状态
+    HTTP_CODE http_code; /* 解析成功后的HTTP状态 */
     CHECK_STATUS checkStatus; /* 有限状态机 */
     LINE_STATUS lineStatus; /* 行状态 */
     int read_index; /* 已经读取到的数据 */
     int checked_index;/* 行检测到的地方 */
     int start_line;/* 行开始地方 */
 
-
+    // 以下是HTTP发送
+    bool http_send_ok; /* http发送完成 */
+    int write_index; /* 当前写入缓冲区的字节 */
+    int send_index; /* 当前已发送的字节 */
 
 
 public:
@@ -58,7 +64,7 @@ public:
     ~Request();
 
     /**
-     * 请求初始化
+     * 请求初始化，分配地址等，配合close方法
      * @param sock
      */
     void init(int sock);
@@ -69,6 +75,13 @@ public:
      * @return
      */
     bool read();
+
+    /**
+     * 将当前send_buf中的数据发送到对端
+     * 正常返回true，异常返回false
+     * @return
+     */
+    bool write();
 
     /**
      * 请求处理方法的入口
@@ -88,9 +101,11 @@ public:
 
     /**
      * 发送respond入口
+     * 主要是将所需内容载入到缓冲区中，并且尝试发送
+     * 如若发送失败则将加入EPOLLOUT事件，由主线程接管。
      * @return
      */
-    HTTP_CODE process_send();
+    bool process_send();
 
     /**
      * 将index.html载入内存
@@ -118,7 +133,8 @@ public:
 private:
 
     /**
-     * 数据初始化准备，和上init不同
+     * 数据初始化准备，每次HTTP请求结束都应该重新加载此次操作
+     * 主要是将Request中checked_index等一些维护HTTP解析数据重制
      */
     void init();
 
@@ -146,6 +162,16 @@ private:
      * @param buf
      */
     HTTP_CODE parse_header(char* buf);
+
+
+    void add_respond_head(int code);
+    void add_blank();
+    void add_content_type();
+    void add_server();
+    void load_context();
+
+
+
 
 };
 

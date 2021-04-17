@@ -14,6 +14,7 @@
 #define PORT 7999
 #define OPENMAX 20000
 #define RECVBUF 1024
+#define SENDBUF 2048
 #define BUFSIZE 2048
 
 

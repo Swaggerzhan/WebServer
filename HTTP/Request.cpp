@@ -8,6 +8,14 @@
 char* Request::index_buf;
 int Request::epfd;
 
+const char* code_200 = "HTTP/1.1 200 OK";
+const char* code_301;
+const char* code_302;
+const char* code_404 = "HTTP/1.1 404 NOT FOUND";
+const char* code_500 = "HTTP/1.1 500 INTERNAL ERROR";
+const char* content_type = "Content-Type: text/html";
+const char* server = "Server: MyWebServer/1.0.0 (Ubuntu)";
+
 
 Request::Request() {
 
@@ -15,25 +23,25 @@ Request::Request() {
 }
 
 void Request::init(int sock) {
-    checkStatus = CHECK_REQUEST_LINE; /* 有限状态机 */
-    lineStatus = LINE_OK; /* 行状态 */
-    read_index = 0; /* 已经读取到的数据 */
-    checked_index = 0;/* 行检测到的地方 */
-    start_line = 0;/* 行开始地方 */
     this->fd = sock;
     recv_buf = new char[RECVBUF];
+    send_buf = new char[SENDBUF];
+    addfd(epfd, fd, true);
+    init();
 }
 
 
 void Request::close_conn() {
     delete [] recv_buf;
+    delete [] send_buf;
+    removefd(epfd, fd);
 }
 
 
 void Request::bufInit() {
     index_buf = new char[BUFSIZE];
     int index_fd = open("../index/index.html", O_RDONLY);
-    read(index_fd, index_buf, BUFSIZE);
+    ::read(index_fd, index_buf, BUFSIZE);
     close(index_fd);
 }
 
@@ -45,9 +53,9 @@ Request::~Request(){
 
 void Request::process() {
 
-    /* 尝试去读数据，如果数据不够则重新加入到epoll中监听读事件 */
-     HTTP_CODE recv_code = process_recv();
-     if (recv_code == INCOMPLETE_REQUEST){
+    /* 尝试解析数据，数据不全则重新加入epoll中等待数据来临 */
+     http_code = process_recv();
+     if ( http_code == INCOMPLETE_REQUEST ){
          modfd(epfd, fd, EPOLLIN);
          return;
      }
@@ -55,9 +63,9 @@ void Request::process() {
      /* 尝试去发送数据，如果发送缓冲区已满那就将其加入到epoll中监听写事件 */
      bool send_code = process_send();
      if ( !send_code ){
-
+         /* 处理异常 */
+         close_conn();
      }
-    modfd(epfd, fd, EPOLLOUT);
 
 }
 
@@ -70,8 +78,13 @@ bool Request::read(){
     while ( true ){
         len = recv(fd, recv_buf, RECVBUF, 0);
         /* 读取完毕 */
-        if ((len == -1) && ( (errno == EAGAIN) || (errno == EWOULDBLOCK)))
-            return true;
+        if ( len == -1 ){
+            if ((errno == EAGAIN) || (errno == EWOULDBLOCK)){
+                return true;
+            }
+            /* 出错 */
+            return false;
+        }
         /* 对方直接关闭了连接，那就直接关闭即可 */
         if (len == 0){
             return false;
@@ -82,8 +95,38 @@ bool Request::read(){
 }
 
 
+bool Request::write(){
+    int len = 0;
+    while ( true ){
+        /* 循环写入直到写入堵塞或者成功 */
+        len = send(fd, send_buf+send_index, write_index-send_index, 0);
+
+        /* 写缓冲区已经堵塞 */
+        if ( len == -1 ){
+            if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+                /* 发送还未完成，监听写事件 */
+                modfd(epfd, fd, EPOLLOUT);
+                return true;
+            }
+            /* 异常退出 */
+            return false;
+
+        }
+        if ( (len == 0) && (send_index == write_index)){
+            /* 响应成功，清空所有接收数据准备下次请求 */
+            init();
+            /* 重新添加到epoll中 */
+            modfd(epfd, fd, EPOLLIN);
+            return true;
+        }
+        /* 累计已写 */
+        send_index += len;
+    }
+}
+
+
 HTTP_CODE Request::process_recv() {
-    /* 此函数后续可以添加新功能 */
+
     /* 尝试解析HTTP请求 */
     HTTP_CODE ret = parse_all();
     return ret;
@@ -91,7 +134,21 @@ HTTP_CODE Request::process_recv() {
 }
 
 
-HTTP_CODE Request::process_send(){
+bool Request::process_send(){
+    //TODO:所有页面的请求方式
+    // 目前只实现单个index页面的方法
+    if ( http_code == BAD_REQUEST ){
+        add_respond_head(500);
+        return write();
+    }
+    add_respond_head(200);
+    add_content_type();
+    add_server();
+    add_blank();
+    /* 载入内容，当前只是index.html */
+    load_context();
+    /* 写入失败将有主线程接管 */
+    return write();
 
 }
 
@@ -235,11 +292,59 @@ HTTP_CODE Request::parse_all() {
 
 
 void Request::init(){
-    checkStatus = CHECK_HEADER;
-    checked_index = 0;
+    checkStatus = CHECK_REQUEST_LINE;
+    lineStatus = LINE_OK;
     read_index = 0;
+    checked_index = 0;
     start_line = 0;
+    http_recv_ok = false;
+
+    write_index = 0;
+    send_index = 0;
+    memset(recv_buf, '\0', RECVBUF);
+    memset(send_buf, '\0', SENDBUF);
+
 }
+
+void Request::add_respond_head(int code) {
+    if (code == 200){
+        strcpy(send_buf, code_200);
+        write_index += strlen(code_200);
+        add_blank();
+        return;
+    }
+    strcpy(send_buf, code_500);
+    write_index += strlen(code_500);
+    add_blank();
+
+}
+
+
+void Request::add_blank() {
+    strcpy(send_buf+write_index, "\r\n");
+    write_index += 2;
+}
+
+void Request::add_content_type() {
+    strcpy(send_buf+write_index, content_type);
+    write_index += strlen(content_type);
+    add_blank();
+}
+
+
+void Request::add_server(){
+    strcpy(send_buf+write_index, server);
+    write_index += strlen(server);
+    add_blank();
+}
+
+
+void Request::load_context() {
+    strcpy(send_buf+write_index, index_buf);
+    write_index += strlen(index_buf);
+}
+
+
 
 
 void addfd(int epfd, int fd, bool oneShot){

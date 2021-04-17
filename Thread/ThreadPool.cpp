@@ -69,15 +69,14 @@ void ThreadPool::run(){
         Request* w = requestLine.front();
         requestLine.pop();
         pthread_mutex_unlock(&lock);
-
-        CODE code = w->process();
+        w->process();
 
     }
 }
 
 
 void* ThreadZ::work(void *arg) {
-    ThreadPool* pool = (ThreadPool*)arg;
+    auto* pool = (ThreadPool*)arg;
     pool->run();
     return pool;
 }
@@ -85,27 +84,4 @@ void* ThreadZ::work(void *arg) {
 
 ThreadZ::ThreadZ(int idx) {
     this->t_idx = idx;
-}
-
-static int setNonBlock(int fd){
-    int old_option = fcntl(fd, F_GETFD);
-    int new_option = old_option | O_NONBLOCK;
-    fcntl(fd, F_SETFD, new_option);
-    return old_option;
-}
-
-
-void addFd(int epfd, int sock){
-    epoll_event event{};
-    event.data.fd = sock;
-    event.events = EPOLLIN | EPOLLET;
-    event.events = EPOLLIN;
-    epoll_ctl(epfd, EPOLL_CTL_ADD, sock, &event);
-    setNonBlock(sock);
-}
-
-
-static void removeFd(int epfd, int sock){
-    epoll_ctl(epfd, EPOLL_CTL_DEL, sock, 0);
-    close(sock);
 }

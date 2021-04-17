@@ -18,7 +18,7 @@
 #include <fcntl.h>
 #include <cstring>
 #include "../utility.h"
-#include "../Timer/TimerHeap.h"
+#include "../HTTP/Request.h"
 
 
 
@@ -108,33 +108,8 @@ public:
     pthread_t pthread_id;
 
 
-
 };
 
-
-
-/**
- * 将fd设置为非堵塞型套接字
- * @param fd
- * @return
- */
-static int setNonBlock(int fd);
-
-
-/**
- * 将fd加入epoll监听
- * @param epfd
- * @param sock
- */
-void addFd(int epfd, int sock);
-
-
-/**
- * 将fd从epoll监听中移除
- * @param epfd
- * @param sock
- */
-static void removeFd(int epfd, int sock);
 
 
 #endif //WEBSERVER_THREADPOOL_H
