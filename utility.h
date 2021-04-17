@@ -13,6 +13,7 @@
 #define HOST "0.0.0.0"
 #define PORT 7999
 #define OPENMAX 20000
+#define RECVBUF 1024
 #define BUFSIZE 2048
 
 

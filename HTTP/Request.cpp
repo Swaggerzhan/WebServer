@@ -14,6 +14,21 @@ Request::Request() {
 
 }
 
+void Request::init(int sock) {
+    checkStatus = CHECK_REQUEST_LINE; /* 有限状态机 */
+    lineStatus = LINE_OK; /* 行状态 */
+    read_index = 0; /* 已经读取到的数据 */
+    checked_index = 0;/* 行检测到的地方 */
+    start_line = 0;/* 行开始地方 */
+    this->fd = sock;
+    recv_buf = new char[RECVBUF];
+}
+
+
+void Request::close_conn() {
+    delete [] recv_buf;
+}
+
 
 void Request::bufInit() {
     index_buf = new char[BUFSIZE];
@@ -24,65 +39,81 @@ void Request::bufInit() {
 
 
 Request::~Request(){
-    delete [] buf;
+
 }
 
 
-CODE Request::process() {
+void Request::process() {
 
-    HTTP_CODE retCode;
-    CHECK_STATUS checkStatus = CHECK_REQUEST_LINE;
-    int checked_index = 0;
-    int read_index = 0;
-    int start_line = 0;
+    /* 尝试去读数据，如果数据不够则重新加入到epoll中监听读事件 */
+     HTTP_CODE recv_code = process_recv();
+     if (recv_code == INCOMPLETE_REQUEST){
+         modfd(epfd, fd, EPOLLIN);
+         return;
+     }
 
+     /* 尝试去发送数据，如果发送缓冲区已满那就将其加入到epoll中监听写事件 */
+     bool send_code = process_send();
+     if ( !send_code ){
+
+     }
+    modfd(epfd, fd, EPOLLOUT);
+
+}
+
+
+bool Request::read(){
+    int len = -1;
+    /* 接收缓冲区满 */
+    if (read_index >= RECVBUF )
+        return false;
     while ( true ){
-
-        int data_len = recv(fd, buf+read_index, BUFSIZE-read_index, 0);
-        if (data_len == -1){
-            printf("recv() error!\n");
-            return ERROR;
+        len = recv(fd, recv_buf, RECVBUF, 0);
+        /* 读取完毕 */
+        if ((len == -1) && ( (errno == EAGAIN) || (errno == EWOULDBLOCK)))
+            return true;
+        /* 对方直接关闭了连接，那就直接关闭即可 */
+        if (len == 0){
+            return false;
         }
-        if (data_len == 0){
-            printf("client closed\n");
-            return CLOSE;
-        }
-        read_index += data_len;
-        retCode = parse_all(buf, checkStatus, checked_index, read_index, start_line);
-        if ( retCode == INCOMPLETE_REQUEST )
-            continue;
-        if ( retCode == BAD_REQUEST )
-            return ERROR;
-        if ( retCode == GET_REQUEST ){
-            /* 提供GET请求服务 */
-            break;
-        }
-
-
+        /* 累计已经读取到的数据 */
+        read_index += len;
     }
-    return KEEP;
+}
+
+
+HTTP_CODE Request::process_recv() {
+    /* 此函数后续可以添加新功能 */
+    /* 尝试解析HTTP请求 */
+    HTTP_CODE ret = parse_all();
+    return ret;
+
+}
+
+
+HTTP_CODE Request::process_send(){
 
 }
 
 
 void Request::time_out(void *arg) {
-    Request* request = (Request*)arg;
+    auto* request = (Request*)arg;
     delete request;
 }
 
-LINE_STATUS Request::parse_line(char *buf, int &checked_index, int &read_index) {
+LINE_STATUS Request::parse_line() {
 
     for (; checked_index <= read_index; ++checked_index ){
-        if (buf[checked_index] == '\r'){
+        if (recv_buf[checked_index] == '\r'){
             /* 差一个\n，行还未完整 */
             if (checked_index + 1 > read_index )
                 return LINE_INCOMPLETE;
             /* 找到一个完整的行！ */
-            if (buf[checked_index + 1] == '\n' ){
+            if (recv_buf[checked_index + 1] == '\n' ){
                 /* 这里不使用简写更清晰 */
-                buf[checked_index] = '\0';
+                recv_buf[checked_index] = '\0';
                 ++ checked_index;
-                buf[checked_index] = '\0';
+                recv_buf[checked_index] = '\0';
                 /* 将其指向下一个新数据 */
                 ++ checked_index;
                 /* 返回行正常 */
@@ -90,11 +121,11 @@ LINE_STATUS Request::parse_line(char *buf, int &checked_index, int &read_index) 
             }
             /* 如果\r后不接\n表示出错！ */
             return LINE_BAD;
-        }else if ( buf[checked_index] == '\n'){
+        }else if ( recv_buf[checked_index] == '\n'){
             /* 处理上次\r之后数据未完整的情况 */
-            if (buf[checked_index - 1] == '\r'){
-                buf[checked_index-1] = '\0';
-                buf[checked_index] = '\0';
+            if (recv_buf[checked_index - 1] == '\r'){
+                recv_buf[checked_index-1] = '\0';
+                recv_buf[checked_index] = '\0';
                 ++ checked_index;
                 return LINE_OK;
             }
@@ -107,12 +138,9 @@ LINE_STATUS Request::parse_line(char *buf, int &checked_index, int &read_index) 
 }
 
 
-HTTP_CODE Request::parse_request_line(char *buf, CHECK_STATUS &checkStatus) {
+HTTP_CODE Request::parse_request_line(char *buf) {
     char *tmp = buf;/* 指向数据头部 */
     int cur = 0; /* 解析索引 */
-    char* method;/* 请求方法 */
-    char* url; /* 请求url */
-    char* version; /* http版本 */
     int count = 1; /* 按顺序解析 method url version */
     while (tmp[cur] != '\0'){
         /* 找到间隔地方 */
@@ -133,13 +161,6 @@ HTTP_CODE Request::parse_request_line(char *buf, CHECK_STATUS &checkStatus) {
         }
         ++ cur;
     }
-    int l;
-    l = strlen(method); request_data[0] = new char[l+1]; request_data[0][l] = '\0';
-    l = strlen(url); request_data[1] = new char[l+1]; request_data[1][l] = '\0';
-    l = strlen(version); request_data[2] = new char[l+1]; request_data[2][l] = '\0';
-    strcpy(request_data[0], method);
-    strcpy(request_data[1], url);
-    strcpy(request_data[2], version);
     /* 更改有限状态机 */
     checkStatus = CHECK_HEADER;
     if (strcasecmp(method, "GET") == 0)
@@ -159,12 +180,16 @@ HTTP_CODE Request::parse_header(char *buf) {
     else if ( strncasecmp(tmp, "Host:", 5) == 0){
         tmp += 5;
         tmp += strspn(tmp, " \t");
-        printf("Host is %s\n", tmp);
+        host = tmp;
     }else if ( strncasecmp(tmp, "User-Agent:", 11) == 0){
         tmp += 11;
         tmp += strspn(tmp, " \t");
-        printf("User-Agent is %s\n", tmp);
-    }else{
+        user_agent = tmp;
+    }else if ( strncasecmp(tmp, "Connection:", 11) == 0){
+        tmp += 11;
+        tmp += strspn(tmp, " \t");
+        keep_alive = strncasecmp(tmp, "keep-alive", 10) == 0;
+    }else {
 
     }
     return INCOMPLETE_REQUEST;
@@ -172,18 +197,18 @@ HTTP_CODE Request::parse_header(char *buf) {
 }
 
 
-HTTP_CODE Request::parse_all(char *buf, CHECK_STATUS &checkStatus, int &checked_index,
-                                 int &read_index, int &start_line) {
-    LINE_STATUS lineStatus = LINE_OK;
+HTTP_CODE Request::parse_all() {
+
+    lineStatus = LINE_OK;
     HTTP_CODE retCode;
     /* 行正确就一只解析下去 */
-    while ( (lineStatus = parse_line(buf, checked_index, read_index)) == LINE_OK ){
-        char *tmp = buf + start_line;
+    while ( (lineStatus = parse_line()) == LINE_OK ){
+        char *tmp = recv_buf + start_line;
         start_line = checked_index;
         switch ( checkStatus ){
             /* 解析请求头 */
             case CHECK_REQUEST_LINE: {
-                retCode = parse_request_line(tmp, checkStatus);
+                retCode = parse_request_line(tmp);
                 /* 解析出错，直接返回 */
                 if (retCode == BAD_REQUEST)
                     return BAD_REQUEST;
@@ -206,4 +231,47 @@ HTTP_CODE Request::parse_all(char *buf, CHECK_STATUS &checkStatus, int &checked_
     if (lineStatus == LINE_INCOMPLETE)
         return INCOMPLETE_REQUEST;
     return BAD_REQUEST;
+}
+
+
+void Request::init(){
+    checkStatus = CHECK_HEADER;
+    checked_index = 0;
+    read_index = 0;
+    start_line = 0;
+}
+
+
+void addfd(int epfd, int fd, bool oneShot){
+    epoll_event event{};
+    event.data.fd = fd;
+    event.events = EPOLLET | EPOLLIN | EPOLLRDHUP;
+    if (oneShot)
+        event.events |= EPOLLOUT;
+    /* 将套接字设置为非阻塞 */
+    epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &event);
+    setNonBlock(fd);
+}
+
+
+void modfd(int epfd, int fd, int ev){
+    epoll_event event{};
+    event.data.fd = fd;
+    event.events = ev | EPOLLET | EPOLLRDHUP | EPOLLONESHOT;
+    epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &event);
+}
+
+
+void removefd(int epfd, int fd){
+    epoll_ctl(epfd, EPOLL_CTL_DEL, fd, nullptr);
+    close(fd);
+}
+
+
+
+int setNonBlock(int fd){
+    int old_option = fcntl(fd, F_GETFD);
+    int new_option = old_option | O_NONBLOCK;
+    fcntl(fd, F_SETFD, new_option);
+    return old_option;
 }
