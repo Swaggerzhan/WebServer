@@ -26,7 +26,6 @@ Request::Request() {
 
 void Request::init(int sock) {
     this->fd = sock;
-
     addfd(epfd, fd, true);
     init();
 }
@@ -35,7 +34,7 @@ void Request::init(int sock) {
 void Request::close_conn() {
 
     removefd(epfd, fd);
-    printf("close\n");
+    //printf("close\n");
 }
 
 
@@ -63,11 +62,8 @@ void Request::process() {
      }
 
      /* 尝试去发送数据，如果发送缓冲区已满那就将其加入到epoll中监听写事件 */
-     bool send_code = process_send();
-     if ( !send_code ){
-         /* 处理异常 */
-         close_conn();
-     }
+     process_send();
+
 
 }
 
@@ -111,6 +107,7 @@ bool Request::write(){
                 return true;
             }
             /* 异常退出 */
+            close_conn();
             return false;
 
         }
@@ -121,9 +118,13 @@ bool Request::write(){
                 /* 重新添加到epoll中 */
                 modfd(epfd, fd, EPOLLIN);
                 return true;
+            }else{
+                init();
+                //printf("not keep-alive\n");
+                close_conn();
+                return false;
             }
-            modfd(epfd, fd, EPOLLIN);
-            return false;
+
         }
         /* 累计已写 */
         send_index += len;
@@ -135,6 +136,7 @@ HTTP_CODE Request::process_recv() {
 
     /* 尝试解析HTTP请求 */
     HTTP_CODE ret = parse_all();
+
     return ret;
 
 }
@@ -205,30 +207,18 @@ LINE_STATUS Request::parse_line() {
 
 
 HTTP_CODE Request::parse_request_line(char *buf) {
-    char *tmp = buf;/* 指向数据头部 */
-    int cur = 0; /* 解析索引 */
-    int count = 1; /* 按顺序解析 method url version */
-    while (tmp[cur] != '\0'){
-        /* 找到间隔地方 */
-        if (tmp[cur] == ' ' || tmp[cur] == '\t'){
-            tmp[cur] = '\0';
-            if (count == 1){
-                method = tmp;
-                ++ count;
-                /* 将其指向下一个数据地址 */
-                tmp += (cur + 1);
-            }else if (count == 2){
-                url = tmp;
-                ++ count;
-                tmp += (cur + 1);
-            }else {
-                version = tmp;
-            }
-        }
-        ++ cur;
-    }
+    /* 返回指向第一个空格或者\t的位子 */
+    url = strpbrk(buf, " \t");
+    *url = '\0'; // 将空格设置为结束符
+    url ++; // 跳过结束符，指向真正的url
+
+    method = buf; // 剩下的即方法
+
+    version = strpbrk(url, " \t");
+    *version = '\0';
+    version ++;
+
     /* 更改有限状态机 */
-    printf("request url: %s\n", url);
     checkStatus = CHECK_HEADER;
     if (strcasecmp(method, "GET") == 0)
         return GET_REQUEST;
@@ -256,8 +246,12 @@ HTTP_CODE Request::parse_header(char *buf) {
         tmp += 11;
         tmp += strspn(tmp, " \t");
         keep_alive = strncasecmp(tmp, "keep-alive", 10) == 0;
-    }else {
-
+    }else if ( strncasecmp(tmp, "Accept:", 7) == 0){
+        tmp += 7;
+        tmp += strspn(tmp, " \t");
+    } else if ( strncasecmp(tmp, "Accept-Encoding", 15) == 0){
+        tmp += 15;
+        tmp += strspn(tmp, " \t");
     }
     return INCOMPLETE_REQUEST;
 
@@ -372,7 +366,7 @@ void addfd(int epfd, int fd, bool oneShot){
     event.data.fd = fd;
     event.events = EPOLLET | EPOLLIN | EPOLLRDHUP;
     if (oneShot)
-        event.events |= EPOLLOUT;
+        event.events |= EPOLLONESHOT;
     /* 将套接字设置为非阻塞 */
     epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &event);
     setNonBlock(fd);
