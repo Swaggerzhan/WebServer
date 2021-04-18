@@ -19,22 +19,21 @@ const char* content_length = "Content-Length: ";
 
 
 Request::Request() {
-
+    recv_buf = new char[RECVBUF];
+    send_buf = new char[SENDBUF];
 
 }
 
 void Request::init(int sock) {
     this->fd = sock;
-    recv_buf = new char[RECVBUF];
-    send_buf = new char[SENDBUF];
+
     addfd(epfd, fd, true);
     init();
 }
 
 
 void Request::close_conn() {
-    delete [] recv_buf;
-    delete [] send_buf;
+
     removefd(epfd, fd);
     printf("close\n");
 }
@@ -49,7 +48,8 @@ void Request::bufInit() {
 
 
 Request::~Request(){
-
+    delete [] recv_buf;
+    delete [] send_buf;
 }
 
 
@@ -147,6 +147,7 @@ bool Request::process_send(){
         add_respond_head(500);
         return write();
     }
+
     add_respond_head(200);
     add_content_type();
     /* 添加长度，当前只是index.html长度 */
@@ -227,6 +228,7 @@ HTTP_CODE Request::parse_request_line(char *buf) {
         ++ cur;
     }
     /* 更改有限状态机 */
+    printf("request url: %s\n", url);
     checkStatus = CHECK_HEADER;
     if (strcasecmp(method, "GET") == 0)
         return GET_REQUEST;

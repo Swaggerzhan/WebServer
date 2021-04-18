@@ -8,11 +8,13 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <iostream>
+#include <cerrno>
 #include <cstring>
+
 
 #define TIMESLOT 1
 #define HOST "0.0.0.0"
-#define PORT 7999
+#define PORT 80
 #define OPENMAX 20000
 #define RECVBUF 1024
 #define SENDBUF 2048
@@ -47,7 +49,6 @@ enum CODE{
     CLOSE, // 客户端关闭请求
     KEEP, // 保持链接
 };
-
 
 
 /**
