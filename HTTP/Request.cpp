@@ -32,9 +32,9 @@ void Request::init(int sock) {
 
 
 void Request::close_conn() {
-
+    printf("close %d\n", fd);
     removefd(epfd, fd);
-    //printf("close\n");
+
 }
 
 
