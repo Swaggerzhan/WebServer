@@ -165,7 +165,23 @@ private:
     void add_blank();
     void add_content_type();
     void add_server();
-    void load_context();
+
+
+    /**
+     * 将请求内容载入内存
+     */
+    void load_content();
+
+
+    /**
+     * 添加内容
+     */
+    void add_content();
+
+    /**
+     * 需要提前调用！
+     */
+    void add_content_length();
 
 
 

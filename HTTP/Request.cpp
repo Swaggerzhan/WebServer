@@ -15,6 +15,7 @@ const char* code_404 = "HTTP/1.1 404 NOT FOUND";
 const char* code_500 = "HTTP/1.1 500 INTERNAL ERROR";
 const char* content_type = "Content-Type: text/html";
 const char* server = "Server: MyWebServer/1.0.0 (Ubuntu)";
+const char* content_length = "Content-Length: ";
 
 
 Request::Request() {
@@ -148,10 +149,12 @@ bool Request::process_send(){
     }
     add_respond_head(200);
     add_content_type();
+    /* 添加长度，当前只是index.html长度 */
+    add_content_length();
     add_server();
     add_blank();
-    /* 载入内容，当前只是index.html */
-    load_context();
+    /* 添加主要内容 */
+    add_content();
     /* 写入失败将有主线程接管 */
     return write();
 
@@ -344,9 +347,19 @@ void Request::add_server(){
 }
 
 
-void Request::load_context() {
+void Request::add_content() {
     strcpy(send_buf+write_index, index_buf);
     write_index += strlen(index_buf);
+}
+
+
+void Request::add_content_length() {
+    int length = strlen(index_buf);
+    sprintf(send_buf+write_index, "%s", content_length);
+    write_index += strlen(content_length);
+    sprintf(send_buf+write_index, "%d", length);
+    write_index = strlen(send_buf);
+    add_blank();
 }
 
 
