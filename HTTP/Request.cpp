@@ -148,7 +148,7 @@ HTTP_CODE Request::process_recv() {
 void Request::decode_route() {
     /* /和空路由直接返回index页面 */
     if ( (strcasecmp(url, "/") == 0) || (url == nullptr)){
-        sprintf(route, "%s", "index.html");
+        sprintf(route, "%s", "../index/index.html");
         return;
     }
 
@@ -158,6 +158,10 @@ void Request::decode_route() {
 HTTP_CODE Request::load_content() {
 
     int file_fd = open(route, O_RDONLY);
+    if (file_fd < 0){
+        exit_error("load_content() open() ", false);
+        return INTERNAL_ERROR;
+    }
     int len = 0;
     while ( (len = ::read(file_fd, send_file_buf, FILEBUF)) > 0 ){
         if (len == -1){
