@@ -17,10 +17,12 @@ const char* content_type = "Content-Type: text/html";
 const char* server = "Server: MyWebServer/1.0.0 (Ubuntu)";
 const char* content_length = "Content-Length: ";
 
+const char* index_html = "index.html";
 
 Request::Request() {
     recv_buf = new char[RECVBUF];
     send_buf = new char[SENDBUF];
+    send_file_buf = new char[FILEBUF];
 
 }
 
@@ -49,6 +51,7 @@ void Request::bufInit() {
 Request::~Request(){
     delete [] recv_buf;
     delete [] send_buf;
+    delete [] send_file_buf;
 }
 
 
@@ -142,6 +145,32 @@ HTTP_CODE Request::process_recv() {
 }
 
 
+void Request::decode_route() {
+    /* /和空路由直接返回index页面 */
+    if ( (strcasecmp(url, "/") == 0) || (url == nullptr)){
+        sprintf(route, "%s", "index.html");
+        return;
+    }
+
+}
+
+
+HTTP_CODE Request::load_content() {
+
+    int file_fd = open(route, O_RDONLY);
+    int len = 0;
+    while ( (len = ::read(file_fd, send_file_buf, FILEBUF)) > 0 ){
+        if (len == -1){
+            exit_error("load_content()", false);
+            break;
+        }
+        file_length += len;
+    }
+    close(file_fd);
+
+}
+
+
 bool Request::process_send(){
     //TODO:所有页面的请求方式
     // 目前只实现单个index页面的方法
@@ -149,11 +178,11 @@ bool Request::process_send(){
         add_respond_head(500);
         return write();
     }
-
-    add_respond_head(200);
+    decode_route();
+    load_content(); /* 将需要请求的页面载入send_file_buf */
+    add_respond_head(200); /* 添加相应头 */
     add_content_type();
-    /* 添加长度，当前只是index.html长度 */
-    add_content_length();
+    add_content_length(); /* 添加长度 */
     add_server();
     add_blank();
     /* 添加主要内容 */
@@ -305,6 +334,8 @@ void Request::init(){
 
     write_index = 0;
     send_index = 0;
+    memset(route, '\0', ROUTE_LENGTH); /* 重置路由为空 */
+    memset(send_file_buf, '\0', FILEBUF);
     memset(recv_buf, '\0', RECVBUF);
     memset(send_buf, '\0', SENDBUF);
 
@@ -344,16 +375,16 @@ void Request::add_server(){
 
 
 void Request::add_content() {
-    strcpy(send_buf+write_index, index_buf);
-    write_index += strlen(index_buf);
+    strcpy(send_buf+write_index, send_file_buf);
+    write_index += file_length;
 }
 
 
 void Request::add_content_length() {
-    int length = strlen(index_buf);
+
     sprintf(send_buf+write_index, "%s", content_length);
     write_index += strlen(content_length);
-    sprintf(send_buf+write_index, "%d", length);
+    sprintf(send_buf+write_index, "%d", (int)file_length);
     write_index = strlen(send_buf);
     add_blank();
 }

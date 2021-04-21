@@ -23,10 +23,12 @@ public:
 
     static char* index_buf; /* 主页信息 */
 
+
     int fd;/* 当前request处理的客户端描述符 */
 
     char *recv_buf; /* 接收缓冲区 */
     char *send_buf; /* 发送缓冲区 */
+    char *send_file_buf; /* 发送文件缓冲区 */
 
     // 以下是HTTP请求解析后的数据
     bool http_recv_ok; /* http请求解析完成 */
@@ -45,10 +47,13 @@ public:
     int checked_index;/* 行检测到的地方 */
     int start_line;/* 行开始地方 */
 
+
     // 以下是HTTP发送
     bool http_send_ok; /* http发送完成 */
     int write_index; /* 当前写入缓冲区的字节 */
     int send_index; /* 当前已发送的字节 */
+    char route[ROUTE_LENGTH] = {}; /* 请求路由 */
+    size_t file_length;
 
 
 public:
@@ -170,7 +175,13 @@ private:
     /**
      * 将请求内容载入内存
      */
-    void load_content();
+    HTTP_CODE load_content();
+
+
+    /**
+     * 解析路由
+     */
+    void decode_route();
 
 
     /**
