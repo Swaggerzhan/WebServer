@@ -145,13 +145,17 @@ HTTP_CODE Request::process_recv() {
 }
 
 
-void Request::decode_route() {
+HTTP_CODE Request::decode_route() {
     /* /和空路由直接返回index页面 */
     if ( (strcasecmp(url, "/") == 0) || (url == nullptr)){
-        sprintf(route, "%s", "../index/index.html");
-        return;
+        sprintf(route, "%s", "index/index.html");
+        return GET_REQUEST;
     }
-
+    /* 出现".."直接返回403 */
+    //TODO:安全检测
+    sprintf(route, "%s", "index");
+    sprintf(route+5, "%s", url);
+    return GET_REQUEST;
 }
 
 
@@ -159,8 +163,14 @@ HTTP_CODE Request::load_content() {
 
     int file_fd = open(route, O_RDONLY);
     if (file_fd < 0){
-        exit_error("load_content() open() ", false);
-        return INTERNAL_ERROR;
+        /* 文件不存在，切换成读取404文件 */
+        if (errno == ENOENT){
+            http_code = NOT_FOUND;
+            file_fd = open("index/404.html", O_RDONLY);
+        }else{
+            exit_error("load_content() open() ", false);
+            return INTERNAL_ERROR;
+        }
     }
     int len = 0;
     while ( (len = ::read(file_fd, send_file_buf, FILEBUF)) > 0 ){
@@ -177,13 +187,23 @@ HTTP_CODE Request::load_content() {
 
 bool Request::process_send(){
     //TODO:所有页面的请求方式
-    // 目前只实现单个index页面的方法
     if ( http_code == BAD_REQUEST ){
         add_respond_head(500);
         return write();
     }
     decode_route();
+
     load_content(); /* 将需要请求的页面载入send_file_buf */
+    /* 文件不存在 */
+    if (http_code == NOT_FOUND){
+        add_respond_head(404);
+        add_content_type();
+        add_content_length();
+        add_server();
+        add_blank();
+        add_content();
+        return write();
+    }
     add_respond_head(200); /* 添加相应头 */
     add_content_type();
     add_content_length(); /* 添加长度 */
@@ -349,6 +369,12 @@ void Request::add_respond_head(int code) {
     if (code == 200){
         strcpy(send_buf, code_200);
         write_index += strlen(code_200);
+        add_blank();
+        return;
+    }
+    if (code == 404){
+        strcpy(send_buf, code_404);
+        write_index += strlen(code_404);
         add_blank();
         return;
     }

@@ -181,7 +181,7 @@ private:
     /**
      * 解析路由
      */
-    void decode_route();
+    HTTP_CODE decode_route();
 
 
     /**
