@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.2)
+cmake_minimum_required(VERSION 3.5)
 
 
 
@@ -17,6 +17,8 @@ add_executable(WebServer main.cpp
     utility.h
         Thread/ThreadPool.h Thread/ThreadPool.cpp
         HTTP/Request.h HTTP/Request.cpp
+         HTTP/Work.h HTTP/Work.cpp
+        HTTP/Respond.h HTTP/Respond.cpp
         )
 
 find_package(Threads)

@@ -20,9 +20,9 @@ int main(){
     /* 获取线程池 */
     ThreadPool* pool = ThreadPool::getPool(epfd, 1);
     /* 客户端初始化，20000个上限 */
-    auto *user = new Request[OPENMAX];
-    Request::bufInit(); // 将主页提前载入内存中
-    Request::epfd = epfd;
+    auto *user = new Work[OPENMAX];
+    Work::epfd = epfd;
+
     printf("init ok!\n");
 
 

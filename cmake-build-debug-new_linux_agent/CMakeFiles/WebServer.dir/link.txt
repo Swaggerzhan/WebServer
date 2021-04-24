@@ -1,0 +1,1 @@
+/usr/bin/g++-7   -g   CMakeFiles/WebServer.dir/main.cpp.o CMakeFiles/WebServer.dir/Thread/ThreadPool.cpp.o CMakeFiles/WebServer.dir/HTTP/Request.cpp.o CMakeFiles/WebServer.dir/HTTP/Work.cpp.o CMakeFiles/WebServer.dir/HTTP/Respond.cpp.o  -o WebServer -lpthread 

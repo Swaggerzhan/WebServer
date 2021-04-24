@@ -52,6 +52,15 @@ enum CODE{
     KEEP, // 保持链接
 };
 
+/**
+ * work请求的状态机
+ */
+enum PROCESS{
+    H_REQUEST,
+    H_RESPOND,
+    H_ERROR,
+};
+
 
 /**
  * 异常处理

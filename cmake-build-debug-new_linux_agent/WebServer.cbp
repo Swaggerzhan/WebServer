@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+   <FileVersion major="1" minor="6" />
+   <Project>
+      <Option title="WebServer" />
+      <Option makefile_is_custom="1" />
+      <Option compiler="gcc" />
+      <Option virtualFolders="CMake Files\;" />
+      <Build>
+      <Target title="all">
+         <Option working_dir="/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 all" />
+            <CompileFile command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="edit_cache">
+         <Option working_dir="/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 edit_cache" />
+            <CompileFile command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="WebServer">
+         <Option output="/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/WebServer" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/7" />
+            <Add directory="/usr/include/c++/7/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/7" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 WebServer" />
+            <CompileFile command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="WebServer/fast">
+         <Option output="/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/WebServer" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/7" />
+            <Add directory="/usr/include/c++/7/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/7" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 WebServer/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="rebuild_cache">
+         <Option working_dir="/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 rebuild_cache" />
+            <CompileFile command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      </Build>
+      <Unit filename="/tmp/tmp.5Kl8EhSIa5/HTTP/Request.cpp">
+         <Option target="WebServer"/>
+      </Unit>
+      <Unit filename="/tmp/tmp.5Kl8EhSIa5/HTTP/Request.h">
+         <Option target="WebServer"/>
+      </Unit>
+      <Unit filename="/tmp/tmp.5Kl8EhSIa5/HTTP/Respond.cpp">
+         <Option target="WebServer"/>
+      </Unit>
+      <Unit filename="/tmp/tmp.5Kl8EhSIa5/HTTP/Respond.h">
+         <Option target="WebServer"/>
+      </Unit>
+      <Unit filename="/tmp/tmp.5Kl8EhSIa5/HTTP/Work.cpp">
+         <Option target="WebServer"/>
+      </Unit>
+      <Unit filename="/tmp/tmp.5Kl8EhSIa5/HTTP/Work.h">
+         <Option target="WebServer"/>
+      </Unit>
+      <Unit filename="/tmp/tmp.5Kl8EhSIa5/Thread/ThreadPool.cpp">
+         <Option target="WebServer"/>
+      </Unit>
+      <Unit filename="/tmp/tmp.5Kl8EhSIa5/Thread/ThreadPool.h">
+         <Option target="WebServer"/>
+      </Unit>
+      <Unit filename="/tmp/tmp.5Kl8EhSIa5/main.cpp">
+         <Option target="WebServer"/>
+      </Unit>
+      <Unit filename="/tmp/tmp.5Kl8EhSIa5/utility.h">
+         <Option target="WebServer"/>
+      </Unit>
+      <Unit filename="/tmp/tmp.5Kl8EhSIa5/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\" />
+      </Unit>
+   </Project>
+</CodeBlocks_project_file>

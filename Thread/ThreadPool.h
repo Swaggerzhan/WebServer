@@ -49,7 +49,7 @@ public:
      * @param request
      * @return
      */
-    static bool append(Request* request);
+    static bool append(Work* work);
 
     /**
      * 从工作队列中取出任务并执行
@@ -81,7 +81,7 @@ public:
     static ThreadPool* instance;
 
     /* 请求队列 */
-    static std::queue<Request*> requestLine;
+    static std::queue<Work*> requestLine;
 
 
 

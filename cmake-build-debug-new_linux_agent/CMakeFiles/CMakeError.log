@@ -1,0 +1,55 @@
+Determining if the pthread_create exist failed with the following output:
+Change Dir: /tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_d404e/fast"
+/usr/bin/make -f CMakeFiles/cmTC_d404e.dir/build.make CMakeFiles/cmTC_d404e.dir/build
+make[1]: Entering directory '/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_d404e.dir/CheckSymbolExists.c.o
+/usr/bin/gcc-7     -o CMakeFiles/cmTC_d404e.dir/CheckSymbolExists.c.o   -c /tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_d404e
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d404e.dir/link.txt --verbose=1
+/usr/bin/gcc-7       CMakeFiles/cmTC_d404e.dir/CheckSymbolExists.c.o  -o cmTC_d404e -rdynamic 
+CMakeFiles/cmTC_d404e.dir/CheckSymbolExists.c.o: In function `main':
+CheckSymbolExists.c:(.text+0x16): undefined reference to `pthread_create'
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_d404e.dir/build.make:97: recipe for target 'cmTC_d404e' failed
+make[1]: *** [cmTC_d404e] Error 1
+make[1]: Leaving directory '/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_d404e/fast' failed
+make: *** [cmTC_d404e/fast] Error 2
+
+File /tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <pthread.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_8cf8f/fast"
+/usr/bin/make -f CMakeFiles/cmTC_8cf8f.dir/build.make CMakeFiles/cmTC_8cf8f.dir/build
+make[1]: Entering directory '/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_8cf8f.dir/CheckFunctionExists.c.o
+/usr/bin/gcc-7    -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_8cf8f.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.5/Modules/CheckFunctionExists.c
+Linking C executable cmTC_8cf8f
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_8cf8f.dir/link.txt --verbose=1
+/usr/bin/gcc-7   -DCHECK_FUNCTION_EXISTS=pthread_create    CMakeFiles/cmTC_8cf8f.dir/CheckFunctionExists.c.o  -o cmTC_8cf8f -rdynamic -lpthreads 
+/usr/bin/ld: cannot find -lpthreads
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_8cf8f.dir/build.make:97: recipe for target 'cmTC_8cf8f' failed
+make[1]: *** [cmTC_8cf8f] Error 1
+make[1]: Leaving directory '/tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_8cf8f/fast' failed
+make: *** [cmTC_8cf8f/fast] Error 2
+
+

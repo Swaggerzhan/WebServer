@@ -1,0 +1,4 @@
+/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/usr/bin/make -DCMAKE_C_COMPILER=/usr/bin/gcc-7 -DCMAKE_CXX_COMPILER=/usr/bin/g++-7 -G "CodeBlocks - Unix Makefiles" /tmp/tmp.5Kl8EhSIa5
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /tmp/tmp.5Kl8EhSIa5/cmake-build-debug-new_linux_agent
