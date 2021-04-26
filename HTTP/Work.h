@@ -61,7 +61,7 @@ public:
     /**
      * 请求处理方法的入口
      */
-    virtual bool process();
+    virtual bool process() = 0;
 
 
     /**

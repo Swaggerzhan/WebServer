@@ -5,9 +5,6 @@
 #include "Request.h"
 
 
-
-
-
 Request::Request() {
     recv_buf = new char[RECVBUF];
     send_buf = new char[SENDBUF];
@@ -15,12 +12,12 @@ Request::Request() {
 
 }
 
+
 void Request::init(int sock) {
     this->fd = sock;
     addfd(epfd, fd, true);
     clear();
 }
-
 
 
 Request::~Request(){
@@ -69,9 +66,6 @@ bool Request::read(){
 }
 
 
-
-
-
 HTTP_CODE Request::decode_route() {
     /* /和空路由直接返回index页面 */
     if ( (strcasecmp(url, "/") == 0) || (url == nullptr)){
@@ -84,7 +78,6 @@ HTTP_CODE Request::decode_route() {
     sprintf(route+5, "%s", url);
     return GET_REQUEST;
 }
-
 
 
 LINE_STATUS Request::parse_line() {
