@@ -107,7 +107,7 @@ public:
      * 如若发送失败则将加入EPOLLOUT事件，由主线程接管。
      * @return
      */
-    bool process_send();
+    void process_send();
 
     /**
      * 将index.html载入内存
@@ -180,8 +180,9 @@ private:
 
     /**
      * 解析路由
+     * 解析会进行http_code状态转移
      */
-    HTTP_CODE decode_route();
+    void decode_route();
 
 
     /**
@@ -194,6 +195,13 @@ private:
      */
     void add_content_length();
 
+
+    /**
+     * 检测是否存在 `..` 字符串
+     * @param msg
+     * @return
+     */
+    bool check_dot(char *msg);
 
 
 

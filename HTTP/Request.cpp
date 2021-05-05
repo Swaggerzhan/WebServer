@@ -145,17 +145,23 @@ HTTP_CODE Request::process_recv() {
 }
 
 
-HTTP_CODE Request::decode_route() {
+void Request::decode_route() {
     /* /和空路由直接返回index页面 */
     if ( (strcasecmp(url, "/") == 0) || (url == nullptr)){
-        sprintf(route, "%s", "index/index.html");
-        return GET_REQUEST;
+        sprintf(route, "%s", "index.html");
+        http_code = GET_REQUEST;
+        return;
     }
+    if (url[0] == '/')
+        url++;
+    
     /* 出现".."直接返回403 */
-    //TODO:安全检测
-    sprintf(route, "%s", "index");
-    sprintf(route+5, "%s", url);
-    return GET_REQUEST;
+    if (check_dot(url)){
+        http_code = FORBIDDEN_REQUEST;
+        return;
+    }
+    sprintf(route, "%s", url);
+    http_code =  GET_REQUEST;
 }
 
 
@@ -166,7 +172,10 @@ HTTP_CODE Request::load_content() {
         /* 文件不存在，切换成读取404文件 */
         if (errno == ENOENT){
             http_code = NOT_FOUND;
-            file_fd = open("index/404.html", O_RDONLY);
+            file_fd = open("404.html", O_RDONLY);
+        }else if (errno == EACCES){ // 权限不够
+            http_code = FORBIDDEN_REQUEST;
+            file_fd = open("403.html", O_RDONLY);
         }else{
             exit_error("load_content() open() ", false);
             return INTERNAL_ERROR;
@@ -185,34 +194,65 @@ HTTP_CODE Request::load_content() {
 }
 
 
-bool Request::process_send(){
+void Request::process_send(){
     //TODO:所有页面的请求方式
     if ( http_code == BAD_REQUEST ){
         add_respond_head(500);
-        return write();
+        write();
+        return;
     }
+    /* 解析路由，将路由信息写入route中，并且改变http_code状态 */
     decode_route();
-
-    load_content(); /* 将需要请求的页面载入send_file_buf */
+    /* 将需要请求的页面载入send_file_buf缓冲区
+     * 包括404 403页面 */
+    load_content();
     /* 文件不存在 */
-    if (http_code == NOT_FOUND){
-        add_respond_head(404);
-        add_content_type();
-        add_content_length();
-        add_server();
-        add_blank();
-        add_content();
-        return write();
+
+    switch (http_code){
+
+        case GET_REQUEST:{
+            add_respond_head(200); // 添加相应头
+            add_content_type();
+            add_content_length(); // 添加长度
+            add_server();
+            add_blank();
+            add_content(); // 添加主要内容
+            write(); // 写入由IO线程接管
+            break;
+        }
+        case POST_REQUEST:
+            break;
+        case BAD_REQUEST:
+            break;
+        case FORBIDDEN_REQUEST:{
+            add_respond_head(403);
+            add_content_type();
+            add_content_length();
+            add_server();
+            add_blank();
+            add_content();
+            write();
+            break;
+        }
+        case INTERNAL_ERROR:
+            break;
+        case CLOSED_CONNECTION:
+            break;
+        case INCOMPLETE_REQUEST:
+            break;
+        case NOT_FOUND:{
+            add_respond_head(404);
+            add_content_type();
+            add_content_length();
+            add_server();
+            add_blank();
+            add_content();
+            write();
+            break;
+        }
+        default:
+            break;
     }
-    add_respond_head(200); /* 添加相应头 */
-    add_content_type();
-    add_content_length(); /* 添加长度 */
-    add_server();
-    add_blank();
-    /* 添加主要内容 */
-    add_content();
-    /* 写入失败将有主线程接管 */
-    return write();
 
 }
 
@@ -407,6 +447,16 @@ void Request::add_server(){
 void Request::add_content() {
     strcpy(send_buf+write_index, send_file_buf);
     write_index += file_length;
+}
+
+
+bool Request::check_dot(char *msg){
+    int len = strlen(msg);
+    for (int i=0; i<len-1; i++){
+        if (msg[i] == '.' && msg[i+1] == '.')
+            return true;
+    }
+    return false;
 }
 
 
