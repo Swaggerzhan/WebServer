@@ -9,6 +9,8 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/sendfile.h>
+#include <sys/uio.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <iostream>
@@ -28,7 +30,6 @@ public:
 
     char *recv_buf; /* 接收缓冲区 */
     char *send_buf; /* 发送缓冲区 */
-    char *send_file_buf; /* 发送文件缓冲区 */
 
     // 以下是HTTP请求解析后的数据
     bool http_recv_ok; /* http请求解析完成 */
@@ -49,11 +50,16 @@ public:
 
 
     // 以下是HTTP发送
-    bool http_send_ok; /* http发送完成 */
-    int write_index; /* 当前写入缓冲区的字节 */
+    bool http_header_send_ok; /* http头发送完成 */
+    int header_buf_len; /* 当前写入缓冲区的字节 */
     int send_index; /* 当前已发送的字节 */
     char route[ROUTE_LENGTH] = {}; /* 请求路由 */
     size_t file_length;
+    int file_already_send_index;
+
+    int file_fd; // 请求目标文件fd
+    iovec** iov_; // 阵列写数组
+    int iov_index_; // 阵列写数组长度索引
 
 
 public:
@@ -94,12 +100,6 @@ public:
      * 关闭链接，清空数据
      */
     void close_conn();
-
-    /**
-     * 解析接收到的请求入口
-     * @return
-     */
-    HTTP_CODE process_recv();
 
     /**
      * 发送respond入口
@@ -166,6 +166,7 @@ private:
     HTTP_CODE parse_header(char* buf);
 
 
+    void pack_http_respond(int code);
     void add_respond_head(int code);
     void add_blank();
     void add_content_type();
@@ -175,20 +176,15 @@ private:
     /**
      * 将请求内容载入内存
      */
-    HTTP_CODE load_content();
+    void load_content();
 
 
     /**
      * 解析路由
      * 解析会进行http_code状态转移
      */
-    void decode_route();
+    HTTP_CODE decode_route();
 
-
-    /**
-     * 添加内容
-     */
-    void add_content();
 
     /**
      * 需要提前调用！
@@ -202,6 +198,14 @@ private:
      * @return
      */
     bool check_dot(char *msg);
+
+
+    /**
+     * 阵列写添加头，非堵塞IO存在问题可能较大！
+     * @param code
+     */
+    void add_respond_header(int code);
+    void add2iov(void* addr, int len);
 
 
 
