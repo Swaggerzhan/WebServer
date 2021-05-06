@@ -154,7 +154,7 @@ void Request::decode_route() {
     }
     if (url[0] == '/')
         url++;
-    
+
     /* 出现".."直接返回403 */
     if (check_dot(url)){
         http_code = FORBIDDEN_REQUEST;
