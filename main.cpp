@@ -18,7 +18,7 @@ int main(){
     event.data.fd = demo;
     epoll_ctl(epfd, EPOLL_CTL_ADD, demo, &event);
     /* 获取线程池 */
-    ThreadPool* pool = ThreadPool::getPool(epfd, 1);
+    ThreadPool* pool = ThreadPool::getPool(epfd, 5);
     /* 客户端初始化，20000个上限 */
     auto *user = new Request[OPENMAX];
     Request::bufInit(); // 将主页提前载入内存中
@@ -50,26 +50,29 @@ int main(){
                 /* 初始化Request类 */
                 user[clientFd].init(clientFd);
                 printf("new client %d\n", clientFd);
+                continue;
             }else if ( eventArray[i].events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)){
                 /* 出错关闭 */
                 printf("EPOLLERR | EPOLLHUP | EPOLLRDHUP\n");
                 user[sockfd].close_conn();
+                //ThreadPool::append( user + sockfd );
+                continue;
             } else if ( eventArray[i].events & EPOLLIN){
                 /* 先尝试去读取数据，如果读取数据失败就直接关闭连接 */
-                printf("epollin\n");
                 if ( user[sockfd].read()){
                     /* 读取成功就将数据扔到池中由其他线程池接管 */
                     ThreadPool::append( user + sockfd );
                 }else{
-                    printf(".read() return false\n");
                     user[sockfd].close_conn();
                 }
+                continue;
             }else if ( eventArray[i].events & EPOLLOUT ){
                 /* 处理上次没有写完的数据 */
                 if (!user[sockfd].write()){
                     /* 出错关闭 */
-                    user[sockfd].close_conn();
+
                 }
+                continue;
             }
         }
     }

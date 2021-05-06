@@ -76,12 +76,14 @@ public:
     /* 条件变量辅助 */
     static pthread_cond_t line_ready;
 
+    static sem_t sem;
 
     /* 线程池实例 */
     static ThreadPool* instance;
 
     /* 请求队列 */
-    static std::queue<Request*> requestLine;
+    static std::queue<Request*> *requestLine;
+
 
 
 

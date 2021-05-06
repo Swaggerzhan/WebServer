@@ -12,8 +12,9 @@ int ThreadPool::m_thread_num;
 ThreadZ** ThreadPool::m_list;
 pthread_mutex_t ThreadPool::lock;
 ThreadPool* ThreadPool::instance;
-std::queue<Request*> ThreadPool::requestLine;
+std::queue<Request*>* ThreadPool::requestLine = new std::queue<Request*>;
 int ThreadPool::epfd;
+sem_t ThreadPool::sem;
 pthread_cond_t ThreadPool::line_ready;
 
 
@@ -30,6 +31,7 @@ ThreadPool::ThreadPool(int epoll_fd, int thread_number) {
     m_thread_num = thread_number;
     lock = PTHREAD_MUTEX_INITIALIZER;
     line_ready = PTHREAD_COND_INITIALIZER;
+    sem_init(&sem, 0, 0);
     epfd = epoll_fd;
     /* 声明指针数组所需要的空间 */
     m_list = new ThreadZ*[m_thread_num];
@@ -51,23 +53,25 @@ ThreadPool::ThreadPool(int epoll_fd, int thread_number) {
 bool ThreadPool::append(Request *request) {
     if ( pthread_mutex_lock(&lock) != 0)
         exit_error("pthread_mutex_lock()", true, 1);
-    requestLine.push(request);
+    requestLine->push(request);
     pthread_mutex_unlock(&lock);
     /* 叫醒睡眠的线程 */
-    pthread_cond_signal(&line_ready);
+    sem_post(&sem);
+    //pthread_cond_signal(&line_ready);
     return true;
 }
 
 void ThreadPool::run(){
     while ( !t_stop ){
         /* -1操作 */
+        sem_wait(&sem);
         if ( pthread_mutex_lock(&lock) != 0)
             exit_error("pthread_mutex_lock()", true, 1);
         /* 里面的东西为空则随眠等待队列就绪 */
-        if ( requestLine.front() == nullptr )
-            pthread_cond_wait(&line_ready, &lock);
-        Request* w = requestLine.front();
-        requestLine.pop();
+//        if ( requestLine->front() == nullptr )
+//            pthread_cond_wait(&line_ready, &lock);
+        Request* w = requestLine->front();
+        requestLine->pop();
         pthread_mutex_unlock(&lock);
         w->process();
 

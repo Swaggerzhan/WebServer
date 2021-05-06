@@ -8,11 +8,11 @@
 char* Request::index_buf;
 int Request::epfd;
 
-const char* code_200 = "HTTP/1.1 200 OK";
+const char* code_200 = "HTTP/1.1 200 OK\r\n";
 const char* code_301;
 const char* code_302;
-const char* code_404 = "HTTP/1.1 404 NOT FOUND";
-const char* code_500 = "HTTP/1.1 500 INTERNAL ERROR";
+const char* code_404 = "HTTP/1.1 404 NOT FOUND\r\n";
+const char* code_500 = "HTTP/1.1 500 INTERNAL ERROR\r\n";
 const char* content_type = "Content-Type: text/html";
 const char* server = "Server: MyWebServer/1.0.0 (Ubuntu)";
 const char* content_length = "Content-Length: ";
@@ -22,7 +22,6 @@ const char* index_html = "index.html";
 Request::Request() {
     recv_buf = new char[RECVBUF];
     send_buf = new char[SENDBUF];
-    send_file_buf = new char[FILEBUF];
 
 }
 
@@ -51,14 +50,14 @@ void Request::bufInit() {
 Request::~Request(){
     delete [] recv_buf;
     delete [] send_buf;
-    delete [] send_file_buf;
 }
 
 
 void Request::process() {
 
     /* 尝试解析数据，数据不全则重新加入epoll中等待数据来临 */
-     http_code = process_recv();
+     http_code = parse_all();
+
      if ( http_code == INCOMPLETE_REQUEST ){
          modfd(epfd, fd, EPOLLIN);
          return;
@@ -97,126 +96,182 @@ bool Request::read(){
 
 
 bool Request::write(){
+    if (!http_header_send_ok){
+        int len = 0;
+        while ( true ){
+            len = send(fd, send_buf+send_index, header_buf_len - send_index, 0);
+            if (len < 0){
+                if ( (errno == EAGAIN) || (errno == EWOULDBLOCK) ){
+                    modfd(epfd, fd, EPOLLOUT);
+                    return true;
+                }
+                close_conn();
+                return false;
+            }
+            if (len == 0){
+                http_header_send_ok = true;
+                break;
+            }
+            send_index += len;
+        }
+    }
     int len = 0;
     while ( true ){
-        /* 循环写入直到写入堵塞或者成功 */
-        len = send(fd, send_buf+send_index, write_index-send_index, 0);
-
-        /* 写缓冲区已经堵塞 */
-        if ( len == -1 ){
-            if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-                /* 发送还未完成，监听写事件 */
+        len = sendfile(fd, file_fd, nullptr, file_length-file_already_send_index);
+        if (len < 0){
+            if ( (errno == EAGAIN) || (errno == EWOULDBLOCK) ){
                 modfd(epfd, fd, EPOLLOUT);
                 return true;
             }
-            /* 异常退出 */
             close_conn();
             return false;
-
         }
-        if ( (len == 0) && (send_index == write_index)){
-            /* 响应成功，清空所有接收数据准备下次请求 */
+        if (len == 0){
             if (keep_alive){
                 init();
-                /* 重新添加到epoll中 */
                 modfd(epfd, fd, EPOLLIN);
                 return true;
             }else{
                 init();
-                //printf("not keep-alive\n");
                 close_conn();
                 return false;
             }
-
         }
-        /* 累计已写 */
-        send_index += len;
+        file_already_send_index += len;
     }
-}
 
-
-HTTP_CODE Request::process_recv() {
-
-    /* 尝试解析HTTP请求 */
-    HTTP_CODE ret = parse_all();
-
-    return ret;
 
 }
 
 
-void Request::decode_route() {
+//bool Request::write(){
+//    int len = 0;
+//    while ( true ){
+//        /* 循环写入直到写入堵塞或者成功 */
+//        len = send(fd, send_buf+send_index, header_buf_len - send_index, 0);
+//        /* 写缓冲区已经堵塞 */
+//        if ( len == -1 ){
+//            if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+//                /* 发送还未完成，监听写事件 */
+//                modfd(epfd, fd, EPOLLOUT);
+//                return true;
+//            }
+//            /* 异常退出 */
+//            close_conn();
+//            return false;
+//        }
+//        if ( (len == 0) && (send_index == header_buf_len)){
+//            /* 响应成功，清空所有接收数据准备下次请求 */
+//            if (keep_alive){
+//                init();
+//                /* 重新添加到epoll中 */
+//                modfd(epfd, fd, EPOLLIN);
+//                return true;
+//            }else{
+//                init();
+//                //printf("not keep-alive\n");
+//                close_conn();
+//                return false;
+//            }
+//        }
+//        /* 累计已写 */
+//        send_index += len;
+//    }
+//}
+
+
+
+
+HTTP_CODE Request::decode_route() {
     /* /和空路由直接返回index页面 */
     if ( (strcasecmp(url, "/") == 0) || (url == nullptr)){
         sprintf(route, "%s", "index.html");
-        http_code = GET_REQUEST;
-        return;
+        return GET_REQUEST;
     }
     if (url[0] == '/')
         url++;
 
     /* 出现".."直接返回403 */
     if (check_dot(url)){
-        http_code = FORBIDDEN_REQUEST;
-        return;
+        return FORBIDDEN_REQUEST;
     }
     sprintf(route, "%s", url);
-    http_code =  GET_REQUEST;
+    return GET_REQUEST;
+}
+
+void Request::load_content() {
+
+    file_fd = open(route, O_RDONLY);
+    if (file_fd < 0){
+        switch (errno){
+            case ENONET:{
+                http_code = NOT_FOUND;
+                file_fd = open("404.html", O_RDONLY);
+                break;
+            }
+            case EACCES:{
+                http_code = FORBIDDEN_REQUEST;
+                file_fd = open("403.html", O_RDONLY);
+                break;
+            }
+            default:{
+                http_code = INTERNAL_ERROR;
+                file_fd = open("500.html", O_RDONLY);
+                break;
+            }
+        }
+    }
+    struct stat file_infor{};
+    fstat(file_fd, &file_infor);
+    file_length = file_infor.st_size;
+
 }
 
 
-HTTP_CODE Request::load_content() {
+//HTTP_CODE Request::load_content() {
+//
+//    int file_fd = open(route, O_RDONLY);
+//    if (file_fd < 0){
+//        /* 文件不存在，切换成读取404文件 */
+//        if (errno == ENOENT){
+//            http_code = NOT_FOUND;
+//            file_fd = open("404.html", O_RDONLY);
+//        }else if (errno == EACCES){ // 权限不够
+//            http_code = FORBIDDEN_REQUEST;
+//            file_fd = open("403.html", O_RDONLY);
+//        }else{
+//            exit_error("load_content() open() ", false);
+//            return INTERNAL_ERROR;
+//        }
+//    }
+//    int len = 0;
+//    while ( (len = ::read(file_fd, send_file_buf, FILEBUF)) > 0 ){
+//        if (len == -1){
+//            exit_error("load_content()", false);
+//            break;
+//        }
+//        file_length += len;
+//    }
+//    close(file_fd);
+//
+//}
 
-    int file_fd = open(route, O_RDONLY);
-    if (file_fd < 0){
-        /* 文件不存在，切换成读取404文件 */
-        if (errno == ENOENT){
-            http_code = NOT_FOUND;
-            file_fd = open("404.html", O_RDONLY);
-        }else if (errno == EACCES){ // 权限不够
-            http_code = FORBIDDEN_REQUEST;
-            file_fd = open("403.html", O_RDONLY);
-        }else{
-            exit_error("load_content() open() ", false);
-            return INTERNAL_ERROR;
-        }
-    }
-    int len = 0;
-    while ( (len = ::read(file_fd, send_file_buf, FILEBUF)) > 0 ){
-        if (len == -1){
-            exit_error("load_content()", false);
-            break;
-        }
-        file_length += len;
-    }
-    close(file_fd);
 
+void Request::pack_http_respond(int code) {
+    add_respond_head(code);
+    add_content_type();
+    add_content_length();
+    add_server();
+    add_blank();
 }
 
 
 void Request::process_send(){
-    //TODO:所有页面的请求方式
-    if ( http_code == BAD_REQUEST ){
-        add_respond_head(500);
-        write();
-        return;
-    }
-    /* 解析路由，将路由信息写入route中，并且改变http_code状态 */
-    decode_route();
-    /* 将需要请求的页面载入send_file_buf缓冲区
-     * 包括404 403页面 */
+
     load_content();
-    /* 文件不存在 */
-
     switch (http_code){
-
         case GET_REQUEST:{
-            add_respond_head(200); // 添加相应头
-            add_content_type();
-            add_content_length(); // 添加长度
-            add_server();
-            add_blank();
-            add_content(); // 添加主要内容
+            pack_http_respond(200); // http包头
             write(); // 写入由IO线程接管
             break;
         }
@@ -225,28 +280,21 @@ void Request::process_send(){
         case BAD_REQUEST:
             break;
         case FORBIDDEN_REQUEST:{
-            add_respond_head(403);
-            add_content_type();
-            add_content_length();
-            add_server();
-            add_blank();
-            add_content();
+            pack_http_respond(403);
             write();
             break;
         }
-        case INTERNAL_ERROR:
+        case INTERNAL_ERROR:{
+            pack_http_respond(500);
+            write();
             break;
+        }
         case CLOSED_CONNECTION:
             break;
         case INCOMPLETE_REQUEST:
             break;
         case NOT_FOUND:{
-            add_respond_head(404);
-            add_content_type();
-            add_content_length();
-            add_server();
-            add_blank();
-            add_content();
+            pack_http_respond(404);
             write();
             break;
         }
@@ -311,6 +359,9 @@ HTTP_CODE Request::parse_request_line(char *buf) {
     *version = '\0';
     version ++;
 
+    if (decode_route() == FORBIDDEN_REQUEST)
+        return FORBIDDEN_REQUEST;
+
     /* 更改有限状态机 */
     checkStatus = CHECK_HEADER;
     if (strcasecmp(method, "GET") == 0)
@@ -366,6 +417,8 @@ HTTP_CODE Request::parse_all() {
                 /* 解析出错，直接返回 */
                 if (retCode == BAD_REQUEST)
                     return BAD_REQUEST;
+                if (retCode == FORBIDDEN_REQUEST)
+                    return FORBIDDEN_REQUEST;
                 break;
             }
                 /* 解析出头字段 */
@@ -396,58 +449,86 @@ void Request::init(){
     start_line = 0;
     http_recv_ok = false;
 
-    write_index = 0;
+    header_buf_len = 0;
     send_index = 0;
+    file_length = 0;
+    http_header_send_ok = false;
+    file_already_send_index = 0;
     memset(route, '\0', ROUTE_LENGTH); /* 重置路由为空 */
-    memset(send_file_buf, '\0', FILEBUF);
     memset(recv_buf, '\0', RECVBUF);
     memset(send_buf, '\0', SENDBUF);
 
 }
 
+void Request::add_respond_header(int code) {
+    switch (code){
+        case 200:{
+            add2iov((void*)code_200, strlen(code_200));
+            break;
+        }
+        case 404:{
+            add2iov((void*)code_404, strlen(code_404));
+            break;
+        }
+        default:{
+            add2iov((void*)code_500, strlen(code_500));
+            break;
+        }
+    }
+}
+
+
+void Request::add2iov(void *addr, int len) {
+    auto io = new iovec;
+    io->iov_base = addr;
+    io->iov_len = len;
+    iov_[iov_index_] = io;
+    ++ iov_index_;
+}
+
+
+
 void Request::add_respond_head(int code) {
-    if (code == 200){
-        strcpy(send_buf, code_200);
-        write_index += strlen(code_200);
-        add_blank();
-        return;
+    switch (code){
+        case 200: {
+            strcpy(send_buf, code_200);
+            header_buf_len += strlen(code_200);
+            break;
+        }
+        case 404: {
+            strcpy(send_buf, code_404);
+            header_buf_len += strlen(code_404);
+            break;
+        }
+        default:{
+            strcpy(send_buf, code_500);
+            header_buf_len += strlen(code_500);
+            break;
+        }
     }
-    if (code == 404){
-        strcpy(send_buf, code_404);
-        write_index += strlen(code_404);
-        add_blank();
-        return;
-    }
-    strcpy(send_buf, code_500);
-    write_index += strlen(code_500);
-    add_blank();
 
 }
 
 
 void Request::add_blank() {
-    strcpy(send_buf+write_index, "\r\n");
-    write_index += 2;
+    strcpy(send_buf + header_buf_len, "\r\n");
+    header_buf_len += 2;
 }
 
 void Request::add_content_type() {
-    strcpy(send_buf+write_index, content_type);
-    write_index += strlen(content_type);
+    strcpy(send_buf + header_buf_len, content_type);
+    header_buf_len += strlen(content_type);
     add_blank();
 }
 
 
 void Request::add_server(){
-    strcpy(send_buf+write_index, server);
-    write_index += strlen(server);
+    strcpy(send_buf + header_buf_len, server);
+    header_buf_len += strlen(server);
     add_blank();
 }
 
 
-void Request::add_content() {
-    strcpy(send_buf+write_index, send_file_buf);
-    write_index += file_length;
-}
 
 
 bool Request::check_dot(char *msg){
@@ -462,10 +543,10 @@ bool Request::check_dot(char *msg){
 
 void Request::add_content_length() {
 
-    sprintf(send_buf+write_index, "%s", content_length);
-    write_index += strlen(content_length);
-    sprintf(send_buf+write_index, "%d", (int)file_length);
-    write_index = strlen(send_buf);
+    sprintf(send_buf + header_buf_len, "%s", content_length);
+    header_buf_len += strlen(content_length);
+    sprintf(send_buf + header_buf_len, "%d", (int)file_length);
+    header_buf_len = strlen(send_buf);
     add_blank();
 }
 
