@@ -117,7 +117,7 @@ bool Request::write(){
     }
     int len = 0;
     while ( true ){
-        len = sendfile(fd, file_fd, (off_t*)&file_already_send_index, file_length-file_already_send_index);
+        len = sendfile(fd, file_fd, nullptr, file_length-file_already_send_index);
         if (len < 0){
             if ( (errno == EAGAIN) || (errno == EWOULDBLOCK) ){
                 modfd(epfd, fd, EPOLLOUT);
@@ -451,6 +451,9 @@ void Request::init(){
 
     header_buf_len = 0;
     send_index = 0;
+    file_length = 0;
+    http_header_send_ok = false;
+    file_already_send_index = 0;
     memset(route, '\0', ROUTE_LENGTH); /* 重置路由为空 */
     memset(recv_buf, '\0', RECVBUF);
     memset(send_buf, '\0', SENDBUF);
