@@ -117,7 +117,7 @@ bool Request::write(){
     }
     int len = 0;
     while ( true ){
-        len = sendfile(fd, file_fd, nullptr, file_length-file_already_send_index);
+        len = sendfile(fd, file_fd, &file_already_send_index, file_length-file_already_send_index);
         if (len < 0){
             if ( (errno == EAGAIN) || (errno == EWOULDBLOCK) ){
                 modfd(epfd, fd, EPOLLOUT);
@@ -137,7 +137,6 @@ bool Request::write(){
                 return false;
             }
         }
-        file_already_send_index += len;
     }
 
 

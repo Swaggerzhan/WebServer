@@ -55,7 +55,7 @@ public:
     int send_index; /* 当前已发送的字节 */
     char route[ROUTE_LENGTH] = {}; /* 请求路由 */
     size_t file_length;
-    int file_already_send_index;
+    off_t file_already_send_index;
 
     int file_fd; // 请求目标文件fd
     iovec** iov_; // 阵列写数组
