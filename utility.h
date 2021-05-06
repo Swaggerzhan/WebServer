@@ -19,7 +19,7 @@
 #define RECVBUF 1024
 #define SENDBUF 2048
 #define BUFSIZE 2048
-#define FILEBUF 4096
+#define FILEBUF 16392
 #define ROUTE_LENGTH 256
 
 enum CHECK_STATUS{

@@ -189,7 +189,7 @@ HTTP_CODE Request::decode_route() {
     }
     if (url[0] == '/')
         url++;
-    
+
     /* 出现".."直接返回403 */
     if (check_dot(url)){
         return FORBIDDEN_REQUEST;
