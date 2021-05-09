@@ -38,6 +38,8 @@ class TimerHeap {
 
 private:
 
+
+    pthread_t timer_thread; // 内部维护一个时间线程？
     TimerNode* heap[OPENMAX]; // 堆数据
     int count; // 当前堆总数
     int maxOpen; /* 堆最大容量 */
@@ -121,7 +123,6 @@ public:
 };
 
 
-extern TimerHeap* timer;
 
 
 #endif //WEBSERVER_TIMERHEAP_H

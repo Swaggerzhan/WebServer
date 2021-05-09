@@ -6,9 +6,6 @@
 
 
 
-
-
-
 TimerNode::TimerNode(time_t expire, Request* request) {
     this->expire = expire;
     /* 保存用户信息 */
