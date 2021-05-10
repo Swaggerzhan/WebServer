@@ -16,15 +16,7 @@
 #include "../HTTP/Request.h"
 #include <sys/select.h>
 #include <time.h>
-
-
-
-void clockSet(int seconds, int mseconds){
-    struct timespec temp{};
-    temp.tv_sec = seconds;
-    temp.tv_nsec = mseconds;
-    select(0, nullptr, nullptr, nullptr, &temp);
-}
+#include <functional>
 
 
 
@@ -39,7 +31,6 @@ class TimerHeap {
 private:
 
 
-    pthread_t timer_thread; // 内部维护一个时间线程？
     TimerNode* heap[OPENMAX]; // 堆数据
     int count; // 当前堆总数
     int maxOpen; /* 堆最大容量 */
@@ -116,6 +107,7 @@ public:
 
     time_t expire; /* 超时时间 */
     void (*call_bak)(void*); /* 回调函数方法 */
+
     Request* client_data;/* 客户信息 */
 
 public:
