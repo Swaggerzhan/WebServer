@@ -15,8 +15,9 @@
 #include "../utility.h"
 #include "../HTTP/Request.h"
 #include <sys/select.h>
-#include <time.h>
 #include <functional>
+#include <sys/time.h>
+
 
 
 
@@ -45,7 +46,7 @@ public:
     ~TimerHeap();
 
     /* 返回堆大小 */
-    int size();
+    inline int size(){return count;}
 
     /**
      * 时间节点的添加
@@ -63,11 +64,16 @@ public:
     TimerNode* pop();
 
 
+    inline TimerNode* top(){
+        return heap[1];
+    }
+
+
 
     /**
-     * 心跳
+     *
      */
-    void tick();
+    void handler_time_out();
 
 
     /**
@@ -105,13 +111,37 @@ private:
 class TimerNode{
 public:
 
-    time_t expire; /* 超时时间 */
+    //time_t expire; /* 超时时间 */
+
+    timeval expire;
+
     void (*call_bak)(void*); /* 回调函数方法 */
 
     Request* client_data;/* 客户信息 */
 
 public:
-    TimerNode(time_t expire, Request* request);
+
+    bool operator < (const TimerNode &rightNode){
+        if (this->expire.tv_sec == rightNode.expire.tv_sec)
+            return this->expire.tv_usec < rightNode.expire.tv_usec;
+        return this->expire.tv_sec < rightNode.expire.tv_sec;
+    }
+
+    bool operator < (const timeval &rightTime){
+        if (this->expire.tv_sec == rightTime.tv_sec)
+            return this->expire.tv_usec < rightTime.tv_usec;
+        return this->expire.tv_sec < rightTime.tv_sec;
+    }
+
+    bool operator > (const TimerNode &rightNode){
+
+        if (this->expire.tv_sec == rightNode.expire.tv_sec)
+            return this->expire.tv_usec > rightNode.expire.tv_usec;
+        return this->expire.tv_sec > rightNode.expire.tv_sec;
+    }
+
+
+    TimerNode(timeval expire, Request* request);
 };
 
 

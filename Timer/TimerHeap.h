@@ -112,6 +112,7 @@ private:
 class TimerNode{
 public:
 
+
     time_t expire; /* 超时时间 */
     void (*call_bak)(void*); /* 回调函数方法 */
     Request* client_data;/* 客户信息 */

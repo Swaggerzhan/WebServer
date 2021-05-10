@@ -2,11 +2,11 @@
 // Created by swagger on 2021/4/10.
 //
 
-#include "TimerHeap.h"
+#include "TimerHeapSelect.h"
 
 
 
-TimerNode::TimerNode(time_t expire, Request* request) {
+TimerNode::TimerNode(timeval expire, Request* request) {
     this->expire = expire;
     /* 保存用户信息 */
     client_data = request;
@@ -44,7 +44,7 @@ bool TimerHeap::insert(TimerNode* target) {
 
 void TimerHeap::shiftUp(int index) {
     while (index > 1){
-        if (heap[index]->expire < heap[index / 2]->expire)
+        if (heap[index] < heap[index / 2])
             swap(&heap[index], &heap[index/2]);
         index /= 2;
     }
@@ -76,10 +76,10 @@ void TimerHeap::shiftDown(int index) {
     while (child <= count){
         /* 从孩子中找出最小的时间值，跟最小的时间值更换 */
         if (child + 1 <= count )
-            if (heap[child + 1]->expire < heap[child]->expire)
+            if (heap[child + 1] < heap[child])
                 child ++;
         /* 如果index的时间比较大，就往下移动 */
-        if (heap[index]->expire > heap[child]->expire)
+        if (heap[index] > heap[child])
             swap(&heap[index], &heap[child]);
 
         /* 继续递归往下寻找 */
@@ -89,8 +89,8 @@ void TimerHeap::shiftDown(int index) {
 }
 
 
-void TimerHeap::tick() {
-    printf("tick tick!..\n");
+void TimerHeap::handler_time_out() {
+    std::cout << "handler_time_out" << std::endl;
     /* 处理超时的时间节点 */
     TimerNode* timerNode;
     while( isTimeOut() ){
@@ -100,7 +100,7 @@ void TimerHeap::tick() {
         delete timerNode;
         /* timerNode->data也是指针 */
     }
-    printf("time out node handle finished\n");
+    std::cout << "time out node handle finished" << std::endl;
 
 }
 
@@ -111,15 +111,13 @@ bool TimerHeap::isTimeOut() {
 
     TimerNode* timerNode = heap[1];
     /* 小于当前时间，超时处理 */
-    if (timerNode->expire < time(nullptr))
-        return true;
-    return false;
+    timeval cur_time{};
+    gettimeofday(&cur_time, nullptr);
+    return *timerNode < cur_time;
+
 }
 
 
-int TimerHeap::size() {
-    return count;
-}
 
 
 

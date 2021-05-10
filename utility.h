@@ -10,6 +10,7 @@
 #include <iostream>
 #include <cerrno>
 #include <cstring>
+#include <unistd.h>
 
 
 #define TIMESLOT 1
@@ -21,6 +22,13 @@
 #define BUFSIZE 2048
 #define FILEBUF 16392
 #define ROUTE_LENGTH 256
+
+
+
+const int TIME_OUT = 1;
+const int NEW_TIME_COME = 0;
+const int RESET_TIMER = 2;
+
 
 enum CHECK_STATUS{
     CHECK_REQUEST_LINE,
@@ -53,6 +61,11 @@ enum CODE{
 };
 
 
+
+
+
+static void printf(const char string[11], const char *msg);
+
 /**
  * 异常处理
  * @param msg
@@ -65,7 +78,6 @@ static void exit_error(const char* msg, bool ex, int code=1){
         exit(code);
     }
 }
-
 
 
 
