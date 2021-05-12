@@ -8,6 +8,8 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <iostream>
+#include <cstdio>
+#include <cstdlib>
 #include <cerrno>
 #include <cstring>
 #include <unistd.h>
@@ -64,7 +66,7 @@ enum CODE{
 
 
 
-static void printf(const char string[11], const char *msg);
+
 
 /**
  * 异常处理

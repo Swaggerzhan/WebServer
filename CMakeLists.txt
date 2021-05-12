@@ -17,9 +17,7 @@ add_executable(WebServer main.cpp
     utility.h
         Thread/ThreadPool.h Thread/ThreadPool.cpp
         HTTP/Request.h HTTP/Request.cpp
-        Timer/TimerHandler.cpp Timer/TimerHandler.h
-        Timer/TimerHeapSelect.h Timer/TimerHeapSelect.cpp
-        )
+        HTTP/Mime.h HTTP/Mime.cpp )
 
 find_package(Threads)
 target_link_libraries(WebServer ${CMAKE_THREAD_LIBS_INIT})

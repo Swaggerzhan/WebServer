@@ -8,12 +8,15 @@
 #include "../utility.h"
 #include <sys/epoll.h>
 #include <unistd.h>
+#include <string>
 #include <sys/types.h>
 #include <sys/sendfile.h>
+#include "Mime.h"
 #include <sys/uio.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <iostream>
+#include <map>
 
 
 class Request {
@@ -21,15 +24,26 @@ class Request {
 
 public:
 
+
+    static const std::string code_200_;
+    static const std::string code_403_;
+    static const std::string code_404_;
+    static const std::string code_500_;
+    static const std::string content_type_;
+    static const std::string server_;
+    static const std::string content_length_;
+
+
     static int epfd;/* epoll描述符 */
 
     static char* index_buf; /* 主页信息 */
 
+    static Mime mime_; /* 返回类型解析器 */
 
     int fd;/* 当前request处理的客户端描述符 */
 
     char *recv_buf; /* 接收缓冲区 */
-    char *send_buf; /* 发送缓冲区 */
+    std::string respond_header_; /* 响应头缓冲区 */
 
     // 以下是HTTP请求解析后的数据
     bool http_recv_ok; /* http请求解析完成 */
@@ -39,6 +53,7 @@ public:
     char *host; /* 请求HOST */
     char *version; /* HTTP版本 */
     bool keep_alive; /* 头字段keep_alive */
+    std::string accept_type_; /* 发送文件类型 */
 
     // 以下是解析HTTP请求的状态
     HTTP_CODE http_code; /* 解析成功后的HTTP状态 */
@@ -48,18 +63,18 @@ public:
     int checked_index;/* 行检测到的地方 */
     int start_line;/* 行开始地方 */
 
+    std::map<std::string, std::string> header_; /* HTTP头 */
+
+
 
     // 以下是HTTP发送
     bool http_header_send_ok; /* http头发送完成 */
-    int header_buf_len; /* 当前写入缓冲区的字节 */
     int send_index; /* 当前已发送的字节 */
-    char route[ROUTE_LENGTH] = {}; /* 请求路由 */
+    std::string route_;
     size_t file_length;
     off_t file_already_send_index;
 
     int file_fd; // 请求目标文件fd
-    iovec** iov_; // 阵列写数组
-    int iov_index_; // 阵列写数组长度索引
 
 
 public:
