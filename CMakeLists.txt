@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 2.8)
 
 
 INCLUDE(CMakeForceCompiler)
-CMAKE_FORCE_C_COMPILER(/usr/bin/gcc GNU)
-CMAKE_FORCE_CXX_COMPILER(/usr/bin/g++ GNU)
+CMAKE_FORCE_C_COMPILER(/storage/app/gnu/gcc-8.2.0/bin/gcc GNU)
+CMAKE_FORCE_CXX_COMPILER(/storage/app/gnu/gcc-8.2.0/bin/g++ GNU)
 project(WebServer)
 
 set(CMAKE_CXX_STANDARD 14)

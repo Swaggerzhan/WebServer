@@ -15,6 +15,7 @@ const std::string Request::code_500_ = "HTTP/1.1 500 INTERNAL ERROR\r\n";
 const std::string Request::content_type_ = "Content-Type: ";
 const std::string Request::server_ = "Server: MyWebServer/1.0.0 (Ubuntu)\r\n";
 const std::string Request::content_length_ = "Content-Length: ";
+Mime Request::mime_;
 
 
 const char* index_html = "index.html";
@@ -387,7 +388,6 @@ void Request::init(){
     start_line = 0;
     http_recv_ok = false;
 
-    header_buf_len = 0;
     send_index = 0;
     file_length = 0;
     http_header_send_ok = false;
