@@ -8,6 +8,7 @@
 #include "../utility.h"
 #include <sys/epoll.h>
 #include <unistd.h>
+#include "../Timer/TimerNode.h"
 #include <string>
 #include <sys/types.h>
 #include <sys/sendfile.h>
@@ -32,7 +33,9 @@ public:
     static const std::string content_type_;
     static const std::string server_;
     static const std::string content_length_;
+    static const std::string connection_;
 
+    TimerNode* node;
 
     static int epfd;/* epoll描述符 */
 
@@ -149,6 +152,7 @@ public:
 
 private:
 
+
     /**
      * 数据初始化准备，每次HTTP请求结束都应该重新加载此次操作
      * 主要是将Request中checked_index等一些维护HTTP解析数据重制
@@ -183,7 +187,7 @@ private:
 
     void pack_http_respond(int code);
     void add_respond_head(int code);
-    void add_blank();
+    void add_connection();
     void add_content_type();
     void add_server();
 
@@ -215,12 +219,6 @@ private:
     bool check_dot(char *msg);
 
 
-    /**
-     * 阵列写添加头，非堵塞IO存在问题可能较大！
-     * @param code
-     */
-    void add_respond_header(int code);
-    void add2iov(void* addr, int len);
 
 
 
@@ -251,6 +249,9 @@ void removefd(int epfd, int fd);
 
 
 int setNonBlock(int fd);
+
+
+void call_back(void* arg);
 
 
 #endif //WEBSERVER_REQUEST_H

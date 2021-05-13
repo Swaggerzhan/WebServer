@@ -1,34 +1,15 @@
 //
-// Created by swagger on 2021/4/10.
+// Created by swagger on 2021/5/10.
 //
 
-#ifndef WEBSERVER_TIMERHEAP_H
-#define WEBSERVER_TIMERHEAP_H
+#ifndef TIMER_TIMERHEAP_H
+#define TIMER_TIMERHEAP_H
 
-#include <csignal>
-#include <sys/poll.h>
+#include "TimerNode.h"
 #include <iostream>
-#include <cstring>
-#include <cassert>
-#include <unistd.h>
-#include <ctime>
 #include "../utility.h"
 #include "../HTTP/Request.h"
 
-
-
-//TODO:缺少更新定时器的方法
-
-/*
- * 信号注册函数
- * */
-void addSig(int sig);
-
-
-
-void sig_handler(int sig);
-
-class TimerNode;
 
 /**
  * 定时器
@@ -37,6 +18,7 @@ class TimerNode;
 class TimerHeap {
 
 private:
+
 
     TimerNode* heap[OPENMAX]; // 堆数据
     int count; // 当前堆总数
@@ -52,30 +34,62 @@ public:
     ~TimerHeap();
 
     /* 返回堆大小 */
-    int size();
+    inline int size(){return count;}
 
     /**
      * 时间节点的添加
      * @return
      */
-    bool insert(TimerNode*);
+    bool insert(Request *request);
+
+
+    /**
+     * 延迟删除 
+     * 
+     */
+    inline void delNode(Request* request){
+        if (!request)
+            return;
+        request->node->call_bak = nullptr;
+    }
 
 
     /**
      * 将堆最顶端的节点推出
-     * 这里并没有处理的删除问题，需要调用者自行删除
+     * 推出的节点可能是延迟删除的产物，也就是call_bak = nullptr
      * @return
      *
      */
     TimerNode* pop();
 
 
-
     /**
-     * 心跳
+     *  返回一个堆定元素，这个元素是可用的
+     *  top函数可能将堆顶的一些延迟删除节点彻底删除掉
+     * @return TimerNode*节点表示正常，nullptr表示堆空
      */
-    void tick();
+    inline TimerNode* top(){
+        while (!isEmpty()){
+            if (!heap[1]->call_bak){
+                TimerNode *node = pop();
+                delete node;
+                continue;
+            }
+            return heap[1];
+        }
+        return nullptr;
+    }
 
+
+    inline bool isEmpty(){ return count == 0; }
+
+
+
+
+
+    
+
+private:
 
     /**
      * 交换值
@@ -84,7 +98,6 @@ public:
      */
     static void swap(TimerNode** left, TimerNode** right);
 
-private:
 
     /**
      * 将对应的index下节点向上移动到该到的地方
@@ -99,30 +112,10 @@ private:
     void shiftDown(int index);
 
 
-    /**
-     * 检测堆最上层是否已经超时了
-     * 如果此时堆为空返回false
-     * @return
-     */
-    bool isTimeOut();
+    
 
 };
 
 
-class TimerNode{
-public:
 
-
-    time_t expire; /* 超时时间 */
-    void (*call_bak)(void*); /* 回调函数方法 */
-    Request* client_data;/* 客户信息 */
-
-public:
-    TimerNode(time_t expire, Request* request);
-};
-
-
-extern TimerHeap* timer;
-
-
-#endif //WEBSERVER_TIMERHEAP_H
+#endif //TIMER_TIMERHEAP_H

@@ -15,6 +15,7 @@ const std::string Request::code_500_ = "HTTP/1.1 500 INTERNAL ERROR\r\n";
 const std::string Request::content_type_ = "Content-Type: ";
 const std::string Request::server_ = "Server: MyWebServer/1.0.0 (Ubuntu)\r\n";
 const std::string Request::content_length_ = "Content-Length: ";
+const std::string Request::connection_ = "Connection: ";
 Mime Request::mime_;
 
 
@@ -127,10 +128,12 @@ bool Request::write(){
         }
         if (len == 0){
             if (keep_alive){
+                std::cout << "fd: " << fd  << " is keep-alive" << std::endl;
                 init();
                 modfd(epfd, fd, EPOLLIN);
                 return true;
             }else{
+                std::cout << "fd: " << fd  << " close connection..." << std::endl;
                 init();
                 close_conn();
                 return false;
@@ -138,9 +141,7 @@ bool Request::write(){
         }
     }
 
-
 }
-
 
 
 HTTP_CODE Request::decode_route() {
@@ -159,6 +160,7 @@ HTTP_CODE Request::decode_route() {
     route_ = url;
     return GET_REQUEST;
 }
+
 
 void Request::load_content() {
 
@@ -197,8 +199,20 @@ void Request::pack_http_respond(int code) {
     add_respond_head(code);
     add_content_type();
     add_content_length();
+    add_connection();
     add_server();
     respond_header_ += "\r\n";
+}
+
+
+void Request::add_connection() {
+    respond_header_ += connection_;
+    if (keep_alive){
+        respond_header_ += "keep-alive\r\n";
+        return;
+    }
+    respond_header_ += "close\r\n";
+
 }
 
 
@@ -294,6 +308,9 @@ HTTP_CODE Request::parse_request_line(char *buf) {
     version = strpbrk(url, " \t");
     *version = '\0';
     version ++;
+    /* HTTP/1.1默认开启keep-alive */
+    keep_alive = strncasecmp(version, "HTTP/1.1", 8) == 0;
+
 
     if (decode_route() == FORBIDDEN_REQUEST)
         return FORBIDDEN_REQUEST;
@@ -326,7 +343,8 @@ HTTP_CODE Request::parse_header(char *buf) {
         tmp += 11;
         tmp += strspn(tmp, " \t");
         header_["Connection"] = tmp;
-        keep_alive = strncasecmp(tmp, "keep-alive", 10) == 0;
+        keep_alive = strncasecmp(tmp, "keep-alive", 10) == 0 ||
+                     strncasecmp(tmp, "Keep-Alive", 10) == 0;
     }else if ( strncasecmp(tmp, "Accept:", 7) == 0){
         tmp += 7;
         tmp += strspn(tmp, " \t");
@@ -486,4 +504,11 @@ int setNonBlock(int fd){
     int new_option = old_option | O_NONBLOCK;
     fcntl(fd, F_SETFL, new_option);
     return old_option;
+}
+
+void call_back(void* arg){
+    int fd = ((Request*)arg)->fd;
+    int epfd = Request::epfd;
+    printf("close %d\n", fd);
+    removefd(epfd, fd);
 }

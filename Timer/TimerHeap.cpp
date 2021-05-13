@@ -1,35 +1,9 @@
 //
-// Created by swagger on 2021/4/10.
+// Created by swagger on 2021/5/10.
 //
 
 #include "TimerHeap.h"
 
-
-
-void addSig(int sig){
-    struct sigaction sa{};
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = sig_handler;
-    sa.sa_flags |= SA_RESTART;
-    sigfillset(&sa.sa_mask);
-    assert( (sigaction(sig, &sa, nullptr)) != -1 );
-
-}
-
-
-void sig_handler(int sig){
-    timer->tick();
-    alarm(TIMESLOT);
-}
-
-
-TimerNode::TimerNode(time_t expire, Request* request) {
-    this->expire = expire;
-    /* 保存用户信息 */
-    client_data = request;
-    call_bak = Request::time_out;
-
-}
 
 
 TimerHeap::TimerHeap() {
@@ -47,21 +21,26 @@ TimerHeap::~TimerHeap() {
 }
 
 
-bool TimerHeap::insert(TimerNode* target) {
-    if (target == nullptr || count >= maxOpen)
+bool TimerHeap::insert(Request* request) {
+    timeval cur_time{};
+    gettimeofday(&cur_time, nullptr);
+    cur_time.tv_sec += TIMESLOT;
+    TimerNode* target = new TimerNode(cur_time, request, call_back);
+    request->node = target;
+    if ( count >= maxOpen )
         return false;
     heap[count + 1] = target;
     /* 将节点移动到所在的地方 */
     shiftUp(count);
     count ++;
+    std::cout << "adding node, expire time: " << request->node->expire.tv_sec << std::endl;
     return true;
-
 }
 
 
 void TimerHeap::shiftUp(int index) {
     while (index > 1){
-        if (heap[index]->expire < heap[index / 2]->expire)
+        if (heap[index] < heap[index / 2])
             swap(&heap[index], &heap[index/2]);
         index /= 2;
     }
@@ -75,15 +54,21 @@ void TimerHeap::swap(TimerNode **left, TimerNode **right) {
 }
 
 
+/**
+ * 将堆顶元素返回，不考虑节点是否被删除的情况
+ * @return
+ */
 TimerNode* TimerHeap::pop() {
-    if ( count <= 0 )
-        return nullptr;
-    TimerNode* retNode = heap[1];
-    swap(&heap[1], &heap[count]);
-    count --; // 维护count数量
-    /* 将堆最后面的节点移动上来后再将其shiftDown移动到该到的地方去 */
-    shiftDown(1);
-    return retNode;
+    while ( !isEmpty() ){
+        TimerNode* retNode = heap[1];
+        swap(&heap[1], &heap[count]);
+        count --; // 维护count数量
+        /* 将堆最后面的节点移动上来后再将其shiftDown移动到该到的地方去 */
+        shiftDown(1);
+        return retNode;
+    }
+    return nullptr;
+
 }
 
 
@@ -93,10 +78,10 @@ void TimerHeap::shiftDown(int index) {
     while (child <= count){
         /* 从孩子中找出最小的时间值，跟最小的时间值更换 */
         if (child + 1 <= count )
-            if (heap[child + 1]->expire < heap[child]->expire)
+            if (heap[child + 1] < heap[child])
                 child ++;
         /* 如果index的时间比较大，就往下移动 */
-        if (heap[index]->expire > heap[child]->expire)
+        if (heap[index] > heap[child])
             swap(&heap[index], &heap[child]);
 
         /* 继续递归往下寻找 */
@@ -104,42 +89,4 @@ void TimerHeap::shiftDown(int index) {
         child = index * 2;
     }
 }
-
-
-void TimerHeap::tick() {
-    printf("tick tick!..\n");
-    /* 处理超时的时间节点 */
-    TimerNode* timerNode;
-    while( isTimeOut() ){
-        timerNode = pop();
-        /* 调用超时回调函数，并将参数传入 */
-        timerNode->call_bak(timerNode->client_data);
-        delete timerNode;
-        /* timerNode->data也是指针 */
-    }
-    printf("time out node handle finished\n");
-
-}
-
-
-bool TimerHeap::isTimeOut() {
-    if (count <= 0)
-        return false;
-
-    TimerNode* timerNode = heap[1];
-    /* 小于当前时间，超时处理 */
-    if (timerNode->expire < time(nullptr))
-        return true;
-    return false;
-}
-
-
-int TimerHeap::size() {
-    return count;
-}
-
-
-
-//这里才是定义
-TimerHeap *timer;
 

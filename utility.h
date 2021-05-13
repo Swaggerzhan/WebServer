@@ -15,7 +15,7 @@
 #include <unistd.h>
 
 
-#define TIMESLOT 1
+#define TIMESLOT 20
 #define HOST "0.0.0.0"
 #define PORT 80
 #define OPENMAX 20000
@@ -28,8 +28,9 @@
 
 
 const int TIME_OUT = 1;
-const int NEW_TIME_COME = 0;
+const int ADD_TIMER = 0;
 const int RESET_TIMER = 2;
+const int SLEEP_FOREVER = 3; // 永久睡眠，直到等待io线程叫醒
 
 
 enum CHECK_STATUS{

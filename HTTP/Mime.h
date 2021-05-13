@@ -21,6 +21,7 @@ public:
 
     Mime(){
         mime[".html"] = "text/html";
+        mime[".css"] = "text/css";
         mime[".avi"] = "video/x-msvideo";
         mime[".bmp"] = "image/bmp";
         mime[".c"] = "text/plain";
@@ -44,7 +45,8 @@ public:
         }
         if (pos == -1 || pos == suffix.size())
             return mime[".html"];
-        Iter iter = mime.find(suffix.substr(pos+1, suffix.size()-pos));
+        std::string suffix2 = suffix.substr(pos, suffix.size()-pos);
+        Iter iter = mime.find(suffix2);
         if (iter == mime.end())
             return mime[".html"];
         return iter->second;

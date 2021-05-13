@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Thread/ThreadPool.h"
+#include "Timer/TimerHandler.h"
 
 
 int network_init();
@@ -8,7 +9,7 @@ int network_init();
 int main(){
 
     int demo = network_init();/* 网络初始化 */
-
+    TimerHandler timer;
     int epfd = epoll_create(5);
     epoll_event *eventArray;
     eventArray = new epoll_event[OPENMAX];
@@ -17,6 +18,8 @@ int main(){
     event.events = EPOLLIN;
     event.data.fd = demo;
     epoll_ctl(epfd, EPOLL_CTL_ADD, demo, &event);
+    //event.data.fd = TimerHandler::pipe2io_thread[0];
+    //epoll_ctl(epfd, EPOLL_CTL_ADD, TimerHandler::pipe2io_thread[0], &event);
     /* 获取线程池 */
     ThreadPool* pool = ThreadPool::getPool(epfd, 5);
     /* 客户端初始化，20000个上限 */
@@ -24,7 +27,6 @@ int main(){
     Request::bufInit(); // 将主页提前载入内存中
     Request::epfd = epfd;
     printf("init ok!\n");
-
 
     while ( true ){
         int ret = epoll_wait(epfd, eventArray, OPENMAX, 10);
@@ -34,7 +36,6 @@ int main(){
                 continue;
             exit_error("epoll_wait()", true,1);
         }
-
         /* 处理链接 */
         for (int i=0 ;i<ret; ++i){
             int sockfd = eventArray[i].data.fd;
@@ -50,19 +51,26 @@ int main(){
                 /* 初始化Request类 */
                 user[clientFd].init(clientFd);
                 printf("new client %d\n", clientFd);
+                //TimerHandler::insert(user + clientFd);
                 continue;
-            }else if ( eventArray[i].events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)){
+            } else if ((sockfd == TimerHandler::pipe2io_thread[0]) && (eventArray[i].events & EPOLLIN)) {
+                /* 处理超时节点 */
+                //TimerHandler::handler_time_out();
+            } else if ( eventArray[i].events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)){
                 /* 出错关闭 */
                 printf("EPOLLERR | EPOLLHUP | EPOLLRDHUP\n");
+                /* 删除定时器 */
+                //TimerHandler::heap.delNode(user + sockfd);
                 user[sockfd].close_conn();
-                //ThreadPool::append( user + sockfd );
                 continue;
             } else if ( eventArray[i].events & EPOLLIN){
                 /* 先尝试去读取数据，如果读取数据失败就直接关闭连接 */
                 if ( user[sockfd].read()){
                     /* 读取成功就将数据扔到池中由其他线程池接管 */
                     ThreadPool::append( user + sockfd );
+                    //TimerHandler::update(user + sockfd);
                 }else{
+                    //TimerHandler::heap.delNode(user + sockfd);
                     user[sockfd].close_conn();
                 }
                 continue;
@@ -70,8 +78,8 @@ int main(){
                 /* 处理上次没有写完的数据 */
                 if (!user[sockfd].write()){
                     /* 出错关闭 */
-
                 }
+
                 continue;
             }
         }
