@@ -15,21 +15,26 @@ class EventLoop;
 class Channel {
 public:
 
+    typedef std::function<void()> Functor;
+
     Channel(EventLoop* loop):loop_(loop), addToLoop_(false){}
     ~Channel(){}
 
-    inline void setReadCallBack(std::function<void()> cb)
-    {
+    void handleEvent();
+
+    inline void setReadCallBack(Functor cb){
         read_call_back = std::move(cb);
     }
-    inline void setWriteCallBack(std::function<void()> cb)
-    {
+    inline void setWriteCallBack(Functor cb){
         write_call_back = std::move(cb);
     }
-    inline void setErrorCallBack(std::function<void()> cb)
-    {
+    inline void setErrorCallBack(Functor cb){
         error_call_back = std::move(cb);
     }
+    inline void setCloseCallBack(Functor cb){
+
+    }
+
     inline void enableEventRead(){event_ |= kReadEvent; update(); }
     inline void enableEventWrite(){event_ |= kWriteEvent; update(); }
     inline void disableEventRead(){event_ &= ~kReadEvent; update(); }
@@ -42,6 +47,7 @@ public:
     inline int getFd() const { return fd_; }
     inline int getStatus() const { return status_; }
     inline void setStatus(int status) { status_ = status; }
+    inline void setEpollRetEvent(int event){epoll_ret_evnet_ = event}
     inline bool isNoneEvent(){return event_ == kNoneEvent;}
 
 
@@ -54,13 +60,15 @@ private:
     EventLoop* loop_; // channel拥有者
     bool addToLoop_; // 是否已经添加到loop中
 
-    std::function<void()> read_call_back;
-    std::function<void()> write_call_back;
-    std::function<void()> error_call_back;
+    Functor read_call_back;
+    Functor write_call_back;
+    Functor error_call_back;
+
 
     int fd_; // 当前channel所操作的fd，channel不拥有它
     int event_; // 当前channel所关注的事件
     int status_; // 当前channel的状态
+    int epoll_ret_evnet_; // EPOLL返回的真正监听事件
 
 
 };

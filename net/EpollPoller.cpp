@@ -50,6 +50,10 @@ void EpollPoller::removeChannel(Channel *channel) {
     channel->setStatus(kNew);
 }
 
+bool EpollPoller::hasChannel(Channel *channel) {
+    auto it = channel_.find(channel->getFd());
+    return channel_.end() != it;
+}
 
 void EpollPoller::poll(std::vector<Channel*> *activeChannels) {
     int ret = ::epoll_wait(epfd_,
@@ -77,6 +81,8 @@ void EpollPoller::poll(std::vector<Channel*> *activeChannels) {
 void EpollPoller::getActChannel(int nums, std::vector<Channel*> *activeChannels) {
     for (int i=0; i<nums; i++){
         auto* channel = static_cast<Channel*>(events_[i].data.ptr);
+        /* 写入真正的EPOLL返回事件 */
+        channel->setEpollRetEvent(events_[i].events);
         activeChannels->push_back(channel);
     }
 }

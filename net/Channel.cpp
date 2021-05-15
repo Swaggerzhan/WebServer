@@ -17,3 +17,18 @@ void Channel::update() {
     addToLoop_ = true;
     loop_->updateChannel(this);
 }
+
+
+void Channel::handleEvent() {
+    if (epoll_ret_evnet_ & EPOLLHUP ||
+    epoll_ret_evnet_ & EPOLLRDHUP ){ // 远程关闭情况
+        //TODO:远程关闭情况，将其丢给上层？
+        if (error_call_back) error_call_back();
+    }
+    if (epoll_ret_evnet_ & EPOLLIN ){
+        if (read_call_back) read_call_back();
+    }
+    if (epoll_ret_evnet_ & EPOLLOUT ){
+        if (write_call_back) write_call_back();
+    }
+}
