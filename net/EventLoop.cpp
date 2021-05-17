@@ -6,6 +6,13 @@
 
 #include "Channel.h"
 #include "EpollPoller.h"
+#include <sys/eventfd.h>
+
+EventLoop::EventLoop(EpollPoller *poller)
+:   poller_(poller), // 初始化EventLoop的poller
+    wakeFd_(),  // 初始化唤醒管道符
+    wakeUpPtr_( new Channel(this, wakeFd_) ) // 初始化唤醒管道符的管理channel，声明周期由unique_ptr管理
+{}
 
 
 void EventLoop::updateChannel(Channel *channel) {
@@ -39,3 +46,8 @@ void EventLoop::loop() {
         eventHandling_ = false;
     }
 }
+
+void EventLoop::doPendingCallBack() {
+
+}
+

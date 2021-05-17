@@ -26,7 +26,11 @@ add_executable(WebServer main.cpp
         Timer/TimerHeap.h Timer/TimerHeap.cpp
         Timer/TimerHandler.h Timer/TimerHandler.cpp
         net/Channel.h net/Channel.cpp
-        net/EventLoop.h net/EventLoop.cpp net/EpollPoller.h net/EpollPoller.cpp )
+        net/EventLoop.h net/EventLoop.cpp net/EpollPoller.h net/EpollPoller.cpp
+        base/Mutex.h base/Condition.h base/Condition.cpp
+        base/CountDownLatch.h base/CountDownLatch.cpp
+
+        )
 
 find_package(Threads)
 target_link_libraries(WebServer ${CMAKE_THREAD_LIBS_INIT})

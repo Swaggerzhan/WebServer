@@ -34,6 +34,8 @@ public:
 
     bool hasChannel(Channel* channel);
 
+
+
 private:
 
     int epfd_; // epoll接口

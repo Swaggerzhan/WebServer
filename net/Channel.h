@@ -17,7 +17,7 @@ public:
 
     typedef std::function<void()> Functor;
 
-    Channel(EventLoop* loop):loop_(loop), addToLoop_(false){}
+    Channel(EventLoop* loop, int fd);
     ~Channel(){}
 
     void handleEvent();
@@ -47,7 +47,7 @@ public:
     inline int getFd() const { return fd_; }
     inline int getStatus() const { return status_; }
     inline void setStatus(int status) { status_ = status; }
-    inline void setEpollRetEvent(int event){epoll_ret_evnet_ = event}
+    inline void setEpollRetEvent(int event){epoll_ret_evnet_ = event;}
     inline bool isNoneEvent(){return event_ == kNoneEvent;}
 
 

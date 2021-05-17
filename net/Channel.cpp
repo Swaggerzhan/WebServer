@@ -11,6 +11,14 @@ const int Channel::kWriteEvent = EPOLLOUT | EPOLLONESHOT | EPOLLET;
 const int Channel::kNoneEvent = 0;
 
 
+Channel::Channel(EventLoop *loop, int fd)
+ :  loop_(loop), // 初始化属于的EventLoop
+    fd_(fd), // 初始化fd
+    event_(0), // 初始事件
+    epoll_ret_evnet_(0), // 初始化epoll真实的触发返回事件
+    status_(-1) // 初始化当前channel状态 -1 为新
+ {}
+
 
 /* 更新channel状态 */
 void Channel::update() {
