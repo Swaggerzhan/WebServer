@@ -31,7 +31,7 @@ add_executable(WebServer main.cpp
         base/CountDownLatch.h base/CountDownLatch.cpp
 
         base/Thread.h base/ThreadPool.h base/ThreadPool.cpp
-        base/Thread.cpp )
+        base/Thread.cpp base/CurrentThread.h base/CurrentThread.cpp )
 
 find_package(Threads)
 target_link_libraries(WebServer ${CMAKE_THREAD_LIBS_INIT})

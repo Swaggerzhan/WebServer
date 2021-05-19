@@ -7,6 +7,8 @@
 
 #include <deque>
 #include <functional>
+#include <vector>
+#include <memory>
 #include "Mutex.h"
 #include "Thread.h"
 #include "Condition.h"
@@ -22,15 +24,17 @@ public:
 
     ~ThreadPool();
 
-    void start(int thread_nums);
+    void start(int thread_nums); // 线程池启动函数
 
-    void run(Task task);
+    void runInThread(); // 线程池中线程一只运行在的循环函数所在
 
-    Task take();
+    void put(Task task); // 往队列中放置任务
 
-    size_t queueSize() const ;
+    Task take(); // 从队列中取出任务
 
-    void stop(){ quit_ = true; }
+    size_t queueSize() const;
+
+    void stop(); // 暂停线程池并且通知所有线程
 
 private:
 
@@ -41,6 +45,7 @@ private:
 
     int thread_nums_;
     bool quit_;
+    std::vector<std::unique_ptr<Thread>> thread_; // 线程数组，使用智能指针管理
 };
 
 

@@ -6,10 +6,40 @@
 
 
 
+namespace CurrentThread{
 
-Thread::Thread(Thread::Functor cb) {
-    /* 直接调用C++11标准std库或者直接使用linux pthread库 */
-    //pthread_create(&threadId_, nullptr, , nullptr);
+    __thread int t_cacheId = 0;
+    __thread char t_threadName[32] = "unknown"; // 线程名称
+    __thread int t_threadNameLength;
+
+};
+
+
+Thread::Thread(Thread::Functor cb, std::string name)
+:   func_(std::move(cb)),
+    name_(std::move(name)),
+    isStart_(false),
+    isJoin_(false)
+{
+
+}
+
+std::string Thread::ThreadName() const {
+    return name_;
+}
+
+
+void Thread::start() {
+
+    isStart_ = true; // 启动线程
+    auto data = new CurrentThread::ThreadData(
+            std::move(func_),
+            name_,
+            &tid_);
+    /* 启动线程 */
+    pthread_create(&threadId_, nullptr, &CurrentThread::entry, data);
+
+
 }
 
 
