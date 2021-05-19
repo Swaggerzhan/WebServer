@@ -30,6 +30,7 @@ add_executable(WebServer main.cpp
         base/Mutex.h base/Condition.h base/Condition.cpp
         base/CountDownLatch.h base/CountDownLatch.cpp
 
+        base/ThreadPool.h base/ThreadPool.cpp
         )
 
 find_package(Threads)
