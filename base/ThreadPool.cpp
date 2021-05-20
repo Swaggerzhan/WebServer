@@ -60,7 +60,7 @@ void ThreadPool::start(int thread_nums) {
     }
 }
 
-/* 线程池中主循环函数 */
+/* 线程池中线程运行在的主循环函数 */
 void ThreadPool::runInThread() {
     Task task;
     while (!quit_){

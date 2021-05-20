@@ -9,8 +9,8 @@
 namespace CurrentThread{
 
     __thread int t_cacheId = 0;
-    __thread char t_threadName[32] = "unknown"; // 线程名称
-    __thread int t_threadNameLength;
+    __thread char t_threadName[32] = "unknown\0"; // 线程名称
+    __thread int t_threadNameLength = 7;
 
 };
 

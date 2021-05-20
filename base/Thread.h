@@ -55,8 +55,10 @@ namespace CurrentThread{
         auto data = static_cast<ThreadData*>(arg);
         *data->tid_ = tid(); // 获取当前线程tid
         strcpy(t_threadName, data->name_.c_str()); // 命名线程名字
+        t_threadNameLength = data->name_.length();
         data->cb_(); // 启动回调函数
-        strcpy(t_threadName, "finish\n"); // 线程终结
+        strcpy(t_threadName, "finish\0"); // 线程终结
+        t_threadNameLength = 6;
         delete data; // 清除内存
         return nullptr;
     }

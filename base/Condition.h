@@ -16,7 +16,6 @@ public:
 
     /* 等待条件变量 */
     void wait(){
-        MutexLockGuard lock(mutex_);
         pthread_cond_wait(&cond_, mutex_.getMutex());
     }
     /* 唤醒部分线程 */
