@@ -32,6 +32,8 @@ public:
 
     size_t length() const { return cur_ - buffer_; }
 
+    bool isWriting() const { return writing_; }
+
     void reset();
 
     size_t write(int fd);

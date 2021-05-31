@@ -5,8 +5,10 @@
 #ifndef ASYNCLOG_LOG_H
 #define ASYNCLOG_LOG_H
 
-
 #include <string>
+#include "TimeStamp.h"
+
+class AsyncLog;
 
 enum LOGLEVEL{
     L_BACKTRACE,
@@ -16,16 +18,17 @@ enum LOGLEVEL{
     L_FATAL,
 };
 
-class AsyncLog;
 
 class Log {
 public:
 
-
     Log(LOGLEVEL loglevel);
 
     Log& operator << (const std::string& msg);
-    Log& operator << (const int fd);
+    Log& operator << (short);
+    Log& operator << (int);
+    Log& operator << (long);
+    Log& operator << (long long);
 
     ~Log();
 
@@ -35,14 +38,8 @@ public:
 
 private:
 
-    void time2str();
-
-private:
-
-    timeval time_;
-
+    TimeStamp time_;
     std::string log_;
-    std::string time_str_;
 
     const static std::string kINFO;
     const static std::string kDEBUG;

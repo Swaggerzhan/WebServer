@@ -8,9 +8,7 @@
 #include <string>
 #include "Mutex.h"
 #include "Condition.h"
-
-class Buffer;
-
+#include "Buffer.h"
 
 class AsyncLog {
 
@@ -35,9 +33,11 @@ private:
     /* 改变生产者线buffer
      * no thread safe */
     void changeBuffer();
+    /* 日志滚动 */
+    void roll();
+    /* 改变新文件 */
+    void changeFile();
 
-    /* 尝试删除一些buffer */
-    void reduceBuffer();
 
 private:
 
@@ -48,9 +48,10 @@ private:
     Buffer* logPtr; // 后端指针
     Buffer* productPtr; // 前端消费者线程
     pthread_t logThread_; // 后端线程id
-    const static int kRingLen; // 默认环长度
 
+    const static int kRingLen; // 默认环长度
     const static std::string dir_; // 日志存储位置
+    const static int64_t kSize; // 日志文件最长长度
 
     MutexLock productMutex_; // 前端锁
     MutexLock logMutex_; // 后端锁

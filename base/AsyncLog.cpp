@@ -3,15 +3,17 @@
 //
 
 #include "AsyncLog.h"
-#include "Buffer.h"
 #include <cassert>
 #include <fcntl.h>
+#include "TimeStamp.h"
 #include <functional>
 #include <unistd.h>
+#include <sys/stat.h>
 
 
 const int AsyncLog::kRingLen = 8; // 默认环长度为8
 const std::string AsyncLog::dir_ = "/log/WebServer/";
+const int64_t AsyncLog::kSize = 1024 * 512; // 512k改变
 
 struct threadData{
     threadData(std::function<void()> cb)
@@ -35,8 +37,9 @@ AsyncLog::AsyncLog()
     logCond_(logMutex_),
     productCond_(productMutex_)
 {
-    std::string file = dir_ + "info.log";
-    fd = open(file.c_str(), O_CREAT | O_RDWR);
+    TimeStamp time_ = TimeStamp::now();
+    std::string file_ = dir_ + time_.getTimeStamp() + ".log";
+    fd = open(file_.c_str(), O_CREAT | O_RDWR | O_APPEND);
     assert(fd > 0);
 
     auto dummyHead = new Buffer;
@@ -113,7 +116,7 @@ void AsyncLog::persist(){
     }
     logPtr->write(fd); // 持久化buffer
     /* 当前块已经写完，指向下一块 */
-    if (reduce){
+    if (reduce){ // 尝试减少一下buffer
         auto delNode = logPtr;
         auto preNode = logPtr->pre_;
         auto nxtNode = logPtr->next_;
@@ -125,13 +128,28 @@ void AsyncLog::persist(){
     }else {
         logPtr = logPtr->next_;
     }
-
+    roll(); // 尝试日志滚动
 }
 
 
-void AsyncLog::reduceBuffer() {
-
+void AsyncLog::roll() {
+    struct stat file_stat{};
+    fstat(fd, &file_stat);
+    if (file_stat.st_size > kSize){
+        changeFile();
+    }
 }
+
+
+void AsyncLog::changeFile() {
+    assert(!logPtr->isWriting());
+    close(fd);
+    TimeStamp time_ = TimeStamp::now();
+    std::string file_ = dir_ + time_.getTimeStamp() + ".log";
+    fd = open(file_.c_str() , O_CREAT | O_RDWR | O_APPEND);
+    assert(fd > 0);
+}
+
 
 /* 线程启动入口 */
 void AsyncLog::start() {

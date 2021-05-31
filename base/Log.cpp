@@ -14,7 +14,7 @@ AsyncLog* Log::asyncLog = nullptr;
 
 
 Log::Log(LOGLEVEL loglevel)
-:   time_()
+:   time_(TimeStamp::now())
 {
     switch (loglevel){
         case L_INFO:{
@@ -37,21 +37,42 @@ Log::Log(LOGLEVEL loglevel)
             break;
         }
     }
-    gettimeofday(&time_, nullptr);
-    time2str();
-    log_ += time_str_;
-
+    log_ += time_.getString();
 }
 
-Log& Log::operator << (const std::string &msg) {
-    log_ += msg;
+
+Log& Log::operator<<(const short target) {
+    char buf[3];
+    sprintf(buf, "%d", target);
+    log_ += buf;
     return *this;
 }
 
-Log& Log::operator<<(const int fd) {
-    char buf[8];
-    sprintf(buf, "%d", fd);
+
+Log& Log::operator<<(const int target) {
+    char buf[5];
+    sprintf(buf, "%d", target);
     log_ += buf;
+    return *this;
+}
+
+Log& Log::operator<<(const long target) {
+    char buf[9];
+    sprintf(buf, "%ld", target);
+    log_ += buf;
+    return *this;
+}
+
+Log& Log::operator<<(const long long target) {
+    char buf[17];
+    sprintf(buf, "%lld", target);
+    log_ += buf;
+    return *this;
+}
+
+
+Log& Log::operator << (const std::string &msg) {
+    log_ += " " + msg;
     return *this;
 }
 
@@ -60,12 +81,6 @@ Log::~Log() {
     if (asyncLog){
         asyncLog->append(log_);
     }
-}
-
-void Log::time2str() {
-    char buf1[24];
-    char buf2[24];
-    sprintf(buf1, "%ld", time_.tv_sec);
-    sprintf(buf2, "%ld", time_.tv_usec);
-    time_str_ = "(" + std::string(buf1) + ":" + buf2 + ")";
+    else
+        std::cout << "log error!" << std::endl;
 }
