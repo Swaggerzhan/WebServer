@@ -52,8 +52,6 @@ public:
     bool http_recv_ok; /* http请求解析完成 */
     char *method; /* 请求方法 */
     char *url; /* 请求url */
-    char *user_agent; /* 客户端使用的user_agent */
-    char *host; /* 请求HOST */
     char *version; /* HTTP版本 */
     bool keep_alive; /* 头字段keep_alive */
     std::string accept_type_; /* 发送文件类型 */

@@ -18,7 +18,7 @@
 #define TIMESLOT 20
 #define HOST "0.0.0.0"
 #define PORT 80
-#define OPENMAX 20000
+#define OPENMAX 50000
 #define RECVBUF 1024
 #define SENDBUF 2048
 #define BUFSIZE 2048

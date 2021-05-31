@@ -23,6 +23,13 @@ public:
         pthread_cond_signal(&cond_);
     }
 
+    void waitTime(int sec){
+        struct timespec wait{};
+        clock_gettime(CLOCK_REALTIME, &wait);
+        wait.tv_sec += sec;
+        pthread_cond_timedwait(&cond_, mutex_.getMutex(), &wait);
+    }
+
     /* 叫醒全部线程 */
     void notifyAll(){
         pthread_cond_broadcast(&cond_);

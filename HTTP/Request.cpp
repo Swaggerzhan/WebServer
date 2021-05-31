@@ -3,6 +3,7 @@
 //
 
 #include "Request.h"
+#include "../base/Log.h"
 
 
 char* Request::index_buf;
@@ -34,7 +35,7 @@ void Request::init(int sock) {
 
 
 void Request::close_conn() {
-    printf("close %d\n", fd);
+    Log(L_INFO) << fd << " " << "closed";
     removefd(epfd, fd);
 
 }
@@ -63,6 +64,8 @@ void Request::process() {
          return;
      }
 
+
+
      /* 尝试去发送数据，如果发送缓冲区已满那就将其加入到epoll中监听写事件 */
      process_send();
 
@@ -87,6 +90,7 @@ bool Request::read(){
         }
         /* 对方直接关闭了连接，那就直接关闭即可 */
         if (len == 0){
+            Log(L_INFO) << "remote: " << fd << "closed";
             return false;
         }
         /* 累计已经读取到的数据 */
@@ -128,12 +132,11 @@ bool Request::write(){
         }
         if (len == 0){
             if (keep_alive){
-                std::cout << "fd: " << fd  << " is keep-alive" << std::endl;
+                Log(L_INFO) << fd << " is keep-alive";
                 init();
                 modfd(epfd, fd, EPOLLIN);
                 return true;
             }else{
-                std::cout << "fd: " << fd  << " close connection..." << std::endl;
                 init();
                 close_conn();
                 return false;
@@ -221,20 +224,27 @@ void Request::process_send(){
     load_content();
     switch (http_code){
         case GET_REQUEST:{
+            Log(L_INFO) <<fd<<" GET REQUEST "<<version<<" "<<url<<" "<<header_["Host:"]<<" ";
             pack_http_respond(200); // http包头
             write(); // 写入由IO线程接管
             break;
         }
-        case POST_REQUEST:
+        case POST_REQUEST: {
+            Log(L_INFO) <<fd << " POST REQUEST " << version<<" "<< url << " "<<header_["Host:"]<<" ";
             break;
-        case BAD_REQUEST:
+        }
+        case BAD_REQUEST: {
+            Log(L_ERROR) <<fd<<" "<< recv_buf;
             break;
+        }
         case FORBIDDEN_REQUEST:{
+            Log(L_ERROR) <<fd<< " FORBIDDEN"<<version<<" "<<url<<" "<<header_["Host:"]<<" ";
             pack_http_respond(403);
             write();
             break;
         }
         case INTERNAL_ERROR:{
+            Log(L_ERROR) <<fd<<" "<< recv_buf;
             pack_http_respond(500);
             write();
             break;
@@ -244,6 +254,7 @@ void Request::process_send(){
         case INCOMPLETE_REQUEST:
             break;
         case NOT_FOUND:{
+            Log(L_ERROR) <<fd<<" FORBIDDEN"<<version<<" "<<url<<" "<<header_["Host:"]<<" ";
             pack_http_respond(404);
             write();
             break;
@@ -300,12 +311,16 @@ LINE_STATUS Request::parse_line() {
 HTTP_CODE Request::parse_request_line(char *buf) {
     /* 返回指向第一个空格或者\t的位子 */
     url = strpbrk(buf, " \t");
+    if (!url)
+        return BAD_REQUEST;
     *url = '\0'; // 将空格设置为结束符
     url ++; // 跳过结束符，指向真正的url
 
     method = buf; // 剩下的即方法
 
     version = strpbrk(url, " \t");
+    if (!version)
+        return BAD_REQUEST;
     *version = '\0';
     version ++;
     /* HTTP/1.1默认开启keep-alive */
@@ -410,7 +425,8 @@ void Request::init(){
     file_length = 0;
     http_header_send_ok = false;
     file_already_send_index = 0;
-    route_.clear();
+    //route_.clear();
+    route_ = "";
     memset(recv_buf, '\0', RECVBUF);
     respond_header_.clear();
 
