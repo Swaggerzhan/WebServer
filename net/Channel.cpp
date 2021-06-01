@@ -1,42 +1,69 @@
 //
-// Created by swagger on 2021/5/15.
+// Created by swagger on 2021/6/1.
 //
 
 #include "Channel.h"
-
-#include "EventLoop.h"
-
-const int Channel::kReadEvent = EPOLLIN | EPOLLONESHOT | EPOLLET;
-const int Channel::kWriteEvent = EPOLLOUT | EPOLLONESHOT | EPOLLET;
-const int Channel::kNoneEvent = 0;
+#include <sys/epoll.h>
+#include <cassert>
 
 
-Channel::Channel(EventLoop *loop, int fd)
- :  loop_(loop), // 初始化属于的EventLoop
-    fd_(fd), // 初始化fd
-    event_(0), // 初始事件
-    epoll_ret_evnet_(0), // 初始化epoll真实的触发返回事件
-    status_(-1) // 初始化当前channel状态 -1 为新
- {}
+Channel::Channel()
+:   fd_(-1),
+    event_(0),
+    retEvent_(0),
+    isUsed_(false)
+{
 
-
-/* 更新channel状态 */
-void Channel::update() {
-    addToLoop_ = true;
-    loop_->updateChannel(this);
 }
 
 
+
+
+Channel::~Channel() {
+
+}
+
+void Channel::setEvent(int ev) {
+    event_ |= ev;
+}
+
+void Channel::setFd(int fd) {
+    assert(!isUsed_);
+    fd_ = fd;
+}
+
+void Channel::setRetEvent(int ev) {
+    retEvent_ = ev;
+}
+
+void Channel::setUsed() {
+    isUsed_ = true;
+}
+
+/* 重置 */
+void Channel::reSet() {
+    errorCallBack = nullptr;
+    readCallBack = nullptr;
+    writeCallBack = nullptr;
+    isUsed_ = false;
+    event_ = 0;
+    retEvent_ = 0;
+    fd_ = -1;
+}
+
+
+/* 通过返回的事件调用回调函数 */
 void Channel::handleEvent() {
-    if (epoll_ret_evnet_ & EPOLLHUP ||
-    epoll_ret_evnet_ & EPOLLRDHUP ){ // 远程关闭情况
-        //TODO:远程关闭情况，将其丢给上层？
-        if (error_call_back) error_call_back();
+    if ( retEvent_ & (EPOLLERR) ){
+        if (errorCallBack)
+            errorCallBack();
     }
-    if (epoll_ret_evnet_ & EPOLLIN ){
-        if (read_call_back) read_call_back();
+    if ( retEvent_ & (EPOLLIN | EPOLLPRI | EPOLLRDHUP)){
+        if (readCallBack)
+            readCallBack();
     }
-    if (epoll_ret_evnet_ & EPOLLOUT ){
-        if (write_call_back) write_call_back();
+    if ( retEvent_ & (EPOLLOUT)){
+        if (writeCallBack)
+            writeCallBack();
     }
 }

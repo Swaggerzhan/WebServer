@@ -4,6 +4,9 @@
 
 #include "Request.h"
 #include "../base/Log.h"
+#include <cstring>
+#include <unistd.h>
+#include <sys/socket.h>
 
 
 char* Request::index_buf;
@@ -19,8 +22,9 @@ const std::string Request::content_length_ = "Content-Length: ";
 const std::string Request::connection_ = "Connection: ";
 Mime Request::mime_;
 
+const int Request::recv_buf_size = 8192;
 
-const char* index_html = "index.html";
+
 
 Request::Request() {
     recv_buf = new char[recv_buf_size];
@@ -40,12 +44,7 @@ void Request::close_conn() {
 }
 
 
-void Request::bufInit() {
-    index_buf = new char[BUFSIZE];
-    int index_fd = open("../index/index.html", O_RDONLY);
-    ::read(index_fd, index_buf, BUFSIZE);
-    close(index_fd);
-}
+
 
 
 Request::~Request(){
@@ -63,11 +62,8 @@ void Request::process() {
          return;
      }
 
-
-
      /* 尝试去发送数据，如果发送缓冲区已满那就将其加入到epoll中监听写事件 */
      process_send();
-
 
 }
 
@@ -75,21 +71,28 @@ void Request::process() {
 bool Request::read(){
     int len = -1;
     /* 接收缓冲区满 */
-    if (read_index >= recv_buf_size )
+    if (read_index >= recv_buf_size ){
+        readStatus_ = ReadError;
         return false;
+    }
     while ( true ){
         len = recv(fd, recv_buf, recv_buf_size, 0);
         /* 读取完毕 */
         if ( len == -1 ){
             if ((errno == EAGAIN) || (errno == EWOULDBLOCK)){
+                /* 只有这里是正常读取，此时应该是在EPOLL循环中，将自己加入到线程池中去 */
+
+                readStatus_ = ReadOk;
                 return true;
             }
             /* 出错 */
+            readStatus_ = ReadError;
             return false;
         }
         /* 对方直接关闭了连接，那就直接关闭即可 */
         if (len == 0){
             Log(L_INFO) << "remote: " << fd << "closed";
+            readStatus_ = ReadEof;
             return false;
         }
         /* 累计已经读取到的数据 */
@@ -102,7 +105,7 @@ bool Request::write(){
     if (!http_header_send_ok){
         int len = 0;
         while ( true ){
-            len = send(fd, respond_header_.c_str()+send_index, respond_header_.size()-send_index, 0);
+            len = ::send(fd, respond_header_.c_str()+send_index, respond_header_.size()-send_index, 0);
             if (len < 0){
                 if ( (errno == EAGAIN) || (errno == EWOULDBLOCK) ){
                     modfd(epfd, fd, EPOLLOUT);
@@ -145,7 +148,7 @@ bool Request::write(){
 }
 
 
-HTTP_CODE Request::decode_route() {
+Request::HTTP_CODE Request::decode_route() {
     /* /和空路由直接返回index页面 */
     if ( (strcasecmp(url, "/") == 0) || (url == nullptr)){
         route_ = "index.html";
@@ -269,7 +272,7 @@ void Request::time_out(void *arg) {
     delete request;
 }
 
-LINE_STATUS Request::parse_line() {
+Request::LINE_STATUS Request::parse_line() {
 
     for (; checked_index <= read_index; ++checked_index ){
         if (recv_buf[checked_index] == '\r'){
@@ -306,7 +309,7 @@ LINE_STATUS Request::parse_line() {
 }
 
 
-HTTP_CODE Request::parse_request_line(char *buf) {
+Request::HTTP_CODE Request::parse_request_line(char *buf) {
     /* 返回指向第一个空格或者\t的位子 */
     url = strpbrk(buf, " \t");
     if (!url)
@@ -339,7 +342,7 @@ HTTP_CODE Request::parse_request_line(char *buf) {
 }
 
 
-HTTP_CODE Request::parse_header(char *buf) {
+Request::HTTP_CODE Request::parse_header(char *buf) {
     char *tmp = buf;
     /* 这一行是最后一行 */
     if ( tmp[0] == '\0' )
@@ -372,7 +375,7 @@ HTTP_CODE Request::parse_header(char *buf) {
 }
 
 
-HTTP_CODE Request::parse_all() {
+Request::HTTP_CODE Request::parse_all() {
 
     lineStatus = LINE_OK;
     HTTP_CODE retCode;

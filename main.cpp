@@ -29,8 +29,9 @@ int main(){
     Request::bufInit(); // 将主页提前载入内存中
     Request::epfd = epfd;
     Log(L_INFO) << "server init OK!";
+    bool quit = false;
 
-    while ( true ){
+    while ( !quit ){
         int ret = epoll_wait(epfd, eventArray, OPENMAX, 10);
         if ( ret < 0 ){
             /* 调试系统中断 */
