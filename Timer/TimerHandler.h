@@ -39,7 +39,7 @@ public:
     TimerHandler(){
         pipe(pipe2timer_thread);
         pipe(pipe2io_thread);
-        FD_SET(pipe2timer_thread[0], &read_set);
+        fd_SET(pipe2timer_thread[0], &read_set);
         pthread_create(&timer_thread, nullptr, TimerHandler::timer_thread_entry, nullptr);
         pthread_detach(timer_thread);
     }

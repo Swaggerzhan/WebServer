@@ -25,7 +25,7 @@ public:
     typedef std::vector<epoll_event> EventList; // 事件
     typedef std::function<void()> Functor; // 回调函数
 
-    explicit EpollPoll(int);
+    explicit EpollPoll(int maxOpen=10000);
 
     ~EpollPoll();
 
@@ -50,18 +50,16 @@ private:
 
 private:
 
+    static int kMaxOpen; // epoll最大返回数量
 
     int epfd_;
     bool quit_; // 是否退出
 
-    std::map<int, Channel*> map_; // 活跃的频道
-    std::deque<Channel*> queue_; // channel 对象池
     EventList event_; // epoll事件返回的数据
-    int channelCount_;
     bool isHandlingCallBack; // 处理回调函数中
 
     /* 用来提前叫醒 */
-    int wakeupFd_;
+    int wakeupfd_;
     Channel* wakeChannel_;
 
     pthread_t threadID_; // 本线程id

@@ -24,7 +24,7 @@ public:
     typedef std::pair<Channel*, Request*> mapNode;
     typedef std::map<Channel*, Request*>::iterator mapIter;
 
-    HttpServer(EpollPoll* poller);
+    HttpServer(EpollPoll* poller, int);
 
     ~HttpServer();
 
@@ -40,6 +40,8 @@ public:
 
     void errorEvent(Channel* channel);
 
+    void process(Request* channel);
+
 
 private:
 
@@ -49,12 +51,13 @@ private:
 
 private:
 
-    std::deque<Channel*> queue_; // 处于queue_中的Channel都是未使用的，对象池
-    std::map<Channel*, Request*> map_; // 通过Channel索引Channel
+    std::deque<Request*> queue_; // 处于queue_中的所有对象都是处于空闲状态
+    std::map<Channel*, Request*> map_; // 通过Channel 索引 Request
 
-    static int listenFd_;
+    static int listenfd_;
     static int port_;
     static sockaddr_in local_addr_;
+    static int kRequestCount_;
 
     EpollPoll* poller_;
     Channel* listenChannel_;

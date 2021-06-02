@@ -7,9 +7,9 @@
 #include <unistd.h>
 #include "Channel.h"
 #include "../base/Mutex.h"
+#include <cstring>
 
-
-
+int EpollPoll::kMaxOpen = 10000;
 
 int create_eventfd(){
     int fd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
@@ -21,50 +21,57 @@ int create_eventfd(){
 }
 
 
-EpollPoll::EpollPoll(int channelCount)
+EpollPoll::EpollPoll(int maxOpen)
 :   epfd_(epoll_create(5)),
     quit_(false),
-    wakeupFd_(create_eventfd()),
-    channelCount_(channelCount),
+    wakeupfd_(create_eventfd()),
     threadID_(pthread_self())
 {
     if (epfd_ < 0)
         Log(L_FATAL) << "epoll create error!";
-    event_.reserve(channelCount_);
+    kMaxOpen = maxOpen;
+    event_.reserve(kMaxOpen);
     wakeChannel_ = new Channel();
-    wakeChannel_->setFd(wakeupFd_);
+    wakeChannel_->setfd(wakeupfd_);
     wakeChannel_->setEvent(EPOLLIN);
     update(EPOLL_CTL_ADD, wakeChannel_);
+
 }
 
 EpollPoll::~EpollPoll() {
     /* 清空所有对象池 */
     assert(quit_);
-    while (!queue_.empty()){
-        Channel* node = queue_.back();
-        delete node;
-        queue_.pop_back();
-    }
+//    while (!queue_.empty()){
+//        Channel* node = queue_.back();
+//        delete node;
+//        queue_.pop_back();
+//    }
+    delete wakeChannel_;
+
 }
 
 
 void EpollPoll::wakeup() {
     uint64_t one = 0;
     Log(L_INFO) << "wakeup called!";
-    int ret = ::write(wakeupFd_, &one, sizeof one);
+    int ret = ::write(wakeupfd_, &one, sizeof one);
     if ( ret != sizeof one )
         Log(L_FATAL) << "wakeup write error!";
 }
 
 
 void EpollPoll::poll() {
-    int ret = epoll_wait(epfd_, &*event_.begin(), event_.size(), 10);
+    int ret = epoll_wait(epfd_, &*event_.begin(), kMaxOpen, 10);
     if (ret < 0){
         if (errno == EINTR)
             Log(L_DEBUG) << "epoll_wait ret EINTR could be debug";
-    }else if (ret == 0)
-        Log(L_DEBUG) << "epoll_wait nothing happened";
-    else {
+        else{
+            printf("%s\n", strerror(errno));
+        }
+    }else if (ret == 0){
+        //Log(L_DEBUG) << "epoll_wait nothing happened";
+    }else {
+        Log(L_DEBUG) << "new connection";
         isHandlingCallBack = true; // 直接处理回调函数
         for (int i=0; i<ret; i++){
             auto* channel = static_cast<Channel*>(event_[i].data.ptr);
@@ -116,17 +123,18 @@ void EpollPoll::update(int op, Channel *channel) {
         epoll_event event{};
         event.data.ptr = channel;
         event.events = channel->getEvent();
-        epoll_ctl(epfd_, op, channel->getFd(), &event);
+        epoll_ctl(epfd_, op, channel->getfd(), &event);
         assert(!channel->getIsUsed()); // 还未被使用
         channel->setUsed(); // channel 已经被使用
+        Log(L_DEBUG) << "add fd:" << channel->getfd();
     }else if (op == EPOLL_CTL_DEL){
-        epoll_ctl(epfd_, op, channel->getFd(), nullptr);
-        channel->reSet(); // 将channel重置，为下次使用做准备
+        epoll_ctl(epfd_, op, channel->getfd(), nullptr);
+        channel->reSet(); // 将channel重置
     }else if (op == EPOLL_CTL_MOD ){ // MOD和ADD区别？
         epoll_event event{};
         event.data.ptr = channel;
         event.events = channel->getEvent();
-        epoll_ctl(epfd_, op, channel->getFd(), &event);
+        epoll_ctl(epfd_, op, channel->getfd(), &event);
         assert(!channel->getIsUsed()); // 还未被使用
         channel->setUsed(); // channel 已经被使用
     }else{

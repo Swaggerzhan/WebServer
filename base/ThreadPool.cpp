@@ -47,17 +47,17 @@ void ThreadPool::put(Task task) {
 void ThreadPool::start(int thread_nums) {
     std::string name = "thread_";
     quit_ = false;
-    thread_.reserve(thread_nums); // 提前准备大小
-    for (int i=1; i<=thread_nums; i++){
+    for (int i=0; i<thread_nums; i++){
         char buf[10];
         sprintf(buf, "%d", i);
         std::string thread_name = name + buf;
-        thread_.emplace_back(new Thread(
+        thread_.push_back(new Thread(
                 std::bind(&ThreadPool::runInThread, this),
                 thread_name
         ));
         thread_[i]->start(); // 启动回调函数
     }
+
 }
 
 /* 线程池中线程运行在的主循环函数 */

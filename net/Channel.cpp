@@ -23,11 +23,18 @@ Channel::~Channel() {
 
 }
 
+
+
+
+
+
+
+
 void Channel::setEvent(int ev) {
     event_ |= ev;
 }
 
-void Channel::setFd(int fd) {
+void Channel::setfd(int fd) {
     assert(!isUsed_);
     fd_ = fd;
 }

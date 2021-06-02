@@ -6,11 +6,10 @@
 #include "../base/Log.h"
 #include <cstring>
 #include <unistd.h>
+#include <malloc.h>
 #include <sys/socket.h>
 
 
-char* Request::index_buf;
-int Request::epfd;
 
 const std::string Request::code_200_ = "HTTP/1.1 200 OK\r\n";
 const std::string Request::code_403_ = "";
@@ -22,25 +21,28 @@ const std::string Request::content_length_ = "Content-Length: ";
 const std::string Request::connection_ = "Connection: ";
 Mime Request::mime_;
 
-const int Request::recv_buf_size = 8192;
+const int Request::recv_buf_size = 4096;
 
 
-
-Request::Request() {
+Request::Request()
+:   channel_()
+{
     recv_buf = new char[recv_buf_size];
-
+    //recv_buf = (char*)malloc(recv_buf_size);
 }
 
-void Request::init(int sock) {
-    this->fd = sock;
-    addfd(epfd, fd, true);
-    init();
+void Request::init(int fd, int ev) {
+    channel_.setfd(fd);
+    channel_.setEvent(ev);
+    channel_.setUsed(); // channel启用
+
 }
 
 
 void Request::close_conn() {
-    removefd(epfd, fd);
-
+    /* 直接关闭链接 */
+    ::close(channel_.getfd());
+    channel_.reSet();
 }
 
 
@@ -52,20 +54,6 @@ Request::~Request(){
 }
 
 
-void Request::process() {
-
-    /* 尝试解析数据，数据不全则重新加入epoll中等待数据来临 */
-     http_code = parse_all();
-
-     if ( http_code == INCOMPLETE_REQUEST ){
-         modfd(epfd, fd, EPOLLIN);
-         return;
-     }
-
-     /* 尝试去发送数据，如果发送缓冲区已满那就将其加入到epoll中监听写事件 */
-     process_send();
-
-}
 
 
 bool Request::read(){
@@ -76,12 +64,11 @@ bool Request::read(){
         return false;
     }
     while ( true ){
-        len = recv(fd, recv_buf, recv_buf_size, 0);
+        len = recv(channel_.getfd(), recv_buf, recv_buf_size, 0);
         /* 读取完毕 */
         if ( len == -1 ){
             if ((errno == EAGAIN) || (errno == EWOULDBLOCK)){
                 /* 只有这里是正常读取，此时应该是在EPOLL循环中，将自己加入到线程池中去 */
-
                 readStatus_ = ReadOk;
                 return true;
             }
@@ -91,7 +78,7 @@ bool Request::read(){
         }
         /* 对方直接关闭了连接，那就直接关闭即可 */
         if (len == 0){
-            Log(L_INFO) << "remote: " << fd << "closed";
+            Log(L_INFO) << "remote: " << channel_.getfd() << "closed";
             readStatus_ = ReadEof;
             return false;
         }
@@ -101,18 +88,17 @@ bool Request::read(){
 }
 
 
-bool Request::write(){
+WriteProcess Request::write(){
     if (!http_header_send_ok){
         int len = 0;
         while ( true ){
-            len = ::send(fd, respond_header_.c_str()+send_index, respond_header_.size()-send_index, 0);
+            len = ::send(channel_.getfd(), respond_header_.c_str()+send_index, respond_header_.size()-send_index, 0);
             if (len < 0){
                 if ( (errno == EAGAIN) || (errno == EWOULDBLOCK) ){
-                    modfd(epfd, fd, EPOLLOUT);
-                    return true;
+                    return WriteIncomplete;
+                }else{
+                    return WriteError;
                 }
-                close_conn();
-                return false;
             }
             if (len == 0){
                 http_header_send_ok = true;
@@ -123,24 +109,21 @@ bool Request::write(){
     }
     int len = 0;
     while ( true ){
-        len = sendfile(fd, file_fd, &file_already_send_index, file_length-file_already_send_index);
+        len = sendfile(channel_.getfd(), file_fd,
+                &file_already_send_index, file_length-file_already_send_index);
         if (len < 0){
             if ( (errno == EAGAIN) || (errno == EWOULDBLOCK) ){
-                modfd(epfd, fd, EPOLLOUT);
-                return true;
+                return WriteIncomplete;
+            }else{
+                return WriteError;
             }
-            close_conn();
-            return false;
         }
         if (len == 0){
             if (keep_alive){
-                init();
-                modfd(epfd, fd, EPOLLIN);
-                return true;
+                return WriteOk;
+                //TODO: keep-alive处理，在Request? 还是HttpServer？
             }else{
-                init();
-                close_conn();
-                return false;
+                return WriteOk;
             }
         }
     }
@@ -225,27 +208,27 @@ void Request::process_send(){
     load_content();
     switch (http_code){
         case GET_REQUEST:{
-            Log(L_INFO) <<fd<<"GET REQUEST"<<version<<url<<header_["Host:"];
+            Log(L_INFO) <<channel_.getfd()<<"GET REQUEST"<<version<<url<<header_["Host:"];
             pack_http_respond(200); // http包头
             write(); // 写入由IO线程接管
             break;
         }
         case POST_REQUEST: {
-            Log(L_INFO) <<fd <<"POST REQUEST"<< version<< url<<header_["Host:"];
+            Log(L_INFO) <<channel_.getfd() <<"POST REQUEST"<< version<< url<<header_["Host:"];
             break;
         }
         case BAD_REQUEST: {
-            Log(L_ERROR) <<fd<< recv_buf;
+            Log(L_ERROR) <<channel_.getfd()<< recv_buf;
             break;
         }
         case FORBIDDEN_REQUEST:{
-            Log(L_ERROR) <<fd<<"FORBIDDEN"<<version<<url<<header_["Host:"];
+            Log(L_ERROR) <<channel_.getfd()<<"FORBIDDEN"<<version<<url<<header_["Host:"];
             pack_http_respond(403);
             write();
             break;
         }
         case INTERNAL_ERROR:{
-            Log(L_ERROR) <<fd<<route_<<recv_buf;
+            Log(L_ERROR) <<channel_.getfd()<<route_<<recv_buf;
             pack_http_respond(500);
             write();
             break;
@@ -255,7 +238,7 @@ void Request::process_send(){
         case INCOMPLETE_REQUEST:
             break;
         case NOT_FOUND:{
-            Log(L_ERROR) <<fd<<"404 NOTFOUND"<<version<<route_<<header_["Host:"];
+            Log(L_ERROR) <<channel_.getfd()<<"404 NOTFOUND"<<version<<route_<<header_["Host:"];
             pack_http_respond(404);
             write();
             break;
@@ -521,11 +504,4 @@ int setNonBlock(int fd){
     int new_option = old_option | O_NONBLOCK;
     fcntl(fd, F_SETFL, new_option);
     return old_option;
-}
-
-void call_back(void* arg){
-    int fd = ((Request*)arg)->fd;
-    int epfd = Request::epfd;
-    printf("close %d\n", fd);
-    removefd(epfd, fd);
 }

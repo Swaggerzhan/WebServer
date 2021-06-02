@@ -18,7 +18,7 @@ class Process;
 class TestProcess;
 
 
-void addFd(int, int);
+void addfd(int, int);
 
 
 

@@ -88,7 +88,7 @@ void TestProcess::run_child() {
         exit(1);
     }
     epollArray = new epoll_event[10];
-    addFd(epfd, pipefd);// 添加到epoll中
+    addfd(epfd, pipefd);// 添加到epoll中
     while ( !m_stop ){
         int ret = epoll_wait(epfd, epollArray, 10, 0);
         if (ret < 0){
@@ -110,7 +110,7 @@ void TestProcess::run_child() {
 }
 
 
-void addFd(int epfd, int fd){
+void addfd(int epfd, int fd){
     epoll_event event;
     event.data.fd = fd;
     event.events = EPOLLIN;

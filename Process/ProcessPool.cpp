@@ -74,7 +74,7 @@ void ProcessPool::run_father() {
     //注册信号和开启epoll
     setup_sig_pipe();
     /* 主进程应该独自监听 */
-    addFd(epfd, demo);
+    addfd(epfd, demo);
     printf("father process running...\n");
     /* 父进程貌似可以什么都不做，直接通知子进程去accept即可 */
     epollArray = new epoll_event[10];
@@ -162,7 +162,7 @@ void ProcessPool::run_child() {
     int pipefd = m_process_list[m_idx]->pipe[0];
     epollArray = new epoll_event[maxOpen];
     /* 将父进程fd添加到epoll中 */
-    addFd(epfd, pipefd);
+    addfd(epfd, pipefd);
 
     while ( !m_stop ){
         int code = epoll_wait(epfd, epollArray, maxOpen, 0);
@@ -184,14 +184,14 @@ void ProcessPool::run_child() {
                 struct sockaddr_in client_addr{};
                 memset(&client_addr, 0, sizeof(client_addr));
                 socklen_t client_addr_sz;
-                int clientFd = accept(demo, (sockaddr*)&client_addr, &client_addr_sz);
-                if ( clientFd < 0 ){
+                int clientfd = accept(demo, (sockaddr*)&client_addr, &client_addr_sz);
+                if ( clientfd < 0 ){
                     printf("client socket error!\n %s\n", strerror(errno));
                     continue;
                 }
                 printf("got new client!\n");
                 /* 添加到epoll循环中去 */
-                addFd(epfd, clientFd);
+                addfd(epfd, clientfd);
                 continue;
             }
             /* 收到信号 */
@@ -228,7 +228,7 @@ void ProcessPool::run_child() {
                 std::string data = "hello there\n";
                 const char *buf = data.data();
                 send(handler_fd, buf, strlen(buf), 0);
-                removeFd(epfd, handler_fd);
+                removefd(epfd, handler_fd);
             }
         }
 
@@ -254,8 +254,8 @@ void ProcessPool::setup_sig_pipe() {
     setNonBlock(sig_pipe[1]);
     /* demo不该在这个地方加入epoll，这将导致所有进程都能接收到监听套接字的信号 */
     /* 这种方式将使主进程没有任何意义，并且会引发进程间的竞争关系 */
-    //addFd(epfd, demo);
-    addFd(epfd, sig_pipe[0]);
+    //addfd(epfd, demo);
+    addfd(epfd, sig_pipe[0]);
     /* 添加信号 */
     addSignal(SIGCHLD, signal_handler);
     addSignal(SIGTERM, signal_handler);
@@ -265,14 +265,14 @@ void ProcessPool::setup_sig_pipe() {
 
 
 static int setNonBlock(int fd){
-    int old_option = fcntl(fd, F_GETFD);
+    int old_option = fcntl(fd, F_GETfd);
     int new_option = old_option | O_NONBLOCK;
-    fcntl(fd, F_SETFD, new_option);
+    fcntl(fd, F_SETfd, new_option);
     return old_option;
 }
 
 
-static void addFd(int epfd, int sock){
+static void addfd(int epfd, int sock){
     epoll_event event{};
     event.data.fd = sock;
     event.events = EPOLLIN | EPOLLET;
@@ -281,7 +281,7 @@ static void addFd(int epfd, int sock){
 }
 
 
-static void removeFd(int epfd, int sock){
+static void removefd(int epfd, int sock){
     epoll_ctl(epfd, EPOLL_CTL_DEL, sock, 0);
     close(sock);
 }

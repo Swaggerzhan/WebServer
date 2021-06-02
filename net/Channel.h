@@ -19,7 +19,7 @@ public:
 
     ~Channel();
 
-    int getFd() const { return fd_; }
+    int getfd() const { return fd_; }
     int getRetEvent() const { return retEvent_; }
     int getEvent() const { return event_; }
     bool getIsUsed() const { return isUsed_; }
@@ -27,7 +27,7 @@ public:
     /* 为channel设置监听事件 */
     void setEvent(int ev);
     void setRetEvent(int ev);
-    void setFd(int fd);
+    void setfd(int fd);
     void setUsed();
     void reSet(); // 重置
 

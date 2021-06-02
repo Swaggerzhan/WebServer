@@ -131,7 +131,7 @@ static int setNonBlock(int fd);
  * @param epfd
  * @param sock
  */
-static void addFd(int epfd, int sock);
+static void addfd(int epfd, int sock);
 
 
 /**
@@ -139,7 +139,7 @@ static void addFd(int epfd, int sock);
  * @param epfd
  * @param sock
  */
-static void removeFd(int epfd, int sock);
+static void removefd(int epfd, int sock);
 
 /**
  * 信号处理函数

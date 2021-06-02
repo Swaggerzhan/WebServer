@@ -21,21 +21,12 @@ namespace CurrentThread{
     extern __thread char t_threadName[32]; // 线程名称
     extern __thread int t_threadNameLength; // 线程名称长度
 
-    pid_t getTid(){
-        return static_cast<pid_t>(::syscall(SYS_gettid));
-    }
+    pid_t getTid();
 
-    void cacheTid(){
-        if (t_cacheId == 0)
-            t_cacheId = getTid();
-    }
+    void cacheTid();
 
     /* 获取tid */
-    inline pid_t tid(){
-        if (t_cacheId == 0)
-            t_cacheId = getTid();
-        return t_cacheId;
-    }
+    inline pid_t tid();
 
 
     struct ThreadData{
@@ -44,24 +35,14 @@ namespace CurrentThread{
         pid_t* tid_;
 
         ThreadData(std::function<void()> cb, std::string name, pid_t* tid)
-        :   cb_(std::move(cb)),
+        :   cb_(cb),
             tid_(tid),
-            name_(std::move(name))
+            name_(name)
         {}
     };
 
     /* 线程真实启动函数，将线程数据传入，之后启动回调函数 */
-    void* entry(void* arg){
-        auto data = static_cast<ThreadData*>(arg);
-        *data->tid_ = tid(); // 获取当前线程tid
-        strcpy(t_threadName, data->name_.c_str()); // 命名线程名字
-        t_threadNameLength = data->name_.length();
-        data->cb_(); // 启动回调函数
-        strcpy(t_threadName, "finish\0"); // 线程终结
-        t_threadNameLength = 6;
-        delete data; // 清除内存
-        return nullptr;
-    }
+    void* entry(void* arg);
 
 
 };

@@ -45,7 +45,7 @@ private:
 
     int thread_nums_;
     bool quit_;
-    std::vector<std::unique_ptr<Thread>> thread_; // 线程数组，使用智能指针管理
+    std::vector<Thread*> thread_; // 线程数组，使用智能指针管理
 };
 
 

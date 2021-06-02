@@ -16,6 +16,45 @@
 #include <fcntl.h>
 #include <iostream>
 #include <map>
+#include "Channel.h"
+
+enum CHECK_STATUS{
+    CHECK_REQUEST_LINE,
+    CHECK_HEADER,
+};
+
+enum ReadProcess{
+    ReadError,
+    ReadOk,
+    ReadEof,
+};
+
+
+enum WriteProcess{
+    WriteOk,
+    WriteIncomplete,
+    WriteError,
+};
+
+
+enum LINE_STATUS{
+    LINE_OK,
+    LINE_BAD,
+    LINE_INCOMPLETE,
+};
+
+enum httpDecode{
+    GET_REQUEST,
+    POST_REQUEST,
+    BAD_REQUEST,
+    FORBIDDEN_REQUEST,
+    INTERNAL_ERROR,
+    CLOSED_CONNECTION,
+    INCOMPLETE_REQUEST,
+    NOT_FOUND,
+};
+
+
 
 
 class Request {
@@ -23,34 +62,7 @@ class Request {
 
 public:
 
-    enum CHECK_STATUS{
-        CHECK_REQUEST_LINE,
-        CHECK_HEADER,
-    };
 
-    enum ReadProcess{
-        ReadError,
-        ReadOk,
-        ReadEof,
-    };
-
-
-    enum LINE_STATUS{
-        LINE_OK,
-        LINE_BAD,
-        LINE_INCOMPLETE,
-    };
-
-    enum HTTP_CODE{
-        GET_REQUEST,
-        POST_REQUEST,
-        BAD_REQUEST,
-        FORBIDDEN_REQUEST,
-        INTERNAL_ERROR,
-        CLOSED_CONNECTION,
-        INCOMPLETE_REQUEST,
-        NOT_FOUND,
-    };
 
 
     static const std::string code_200_;
@@ -62,14 +74,11 @@ public:
     static const std::string content_length_;
     static const std::string connection_;
 
+    Channel channel_; // Request中所保存的频道
 
-    static int epfd;/* epoll描述符 */
-
-    static char* index_buf; /* 主页信息 */
 
     static Mime mime_; /* 返回类型解析器 */
 
-    int fd;/* 当前request处理的客户端描述符 */
     const static int recv_buf_size; /* 接收缓冲区大小 */
     char *recv_buf; /* 接收缓冲区 */
     std::string respond_header_; /* 响应头缓冲区 */
@@ -83,7 +92,7 @@ public:
     std::string accept_type_; /* 发送文件类型 */
 
     // 以下是解析HTTP请求的状态
-    HTTP_CODE http_code; /* 解析成功后的HTTP状态 */
+    httpDecode http_code; /* 解析成功后的HTTP状态 */
     CHECK_STATUS checkStatus; /* 有限状态机 */
     LINE_STATUS lineStatus; /* 行状态 */
     ReadProcess readStatus_; // read状态
@@ -113,10 +122,10 @@ public:
     ~Request();
 
     /**
-     * 请求初始化，分配地址等，配合close方法
+     * 请求初始化，通过fd和event初始化Request
      * @param sock
      */
-    void init(int sock);
+    void init(int, int);
 
     /**
      * 当前读取状态
@@ -128,12 +137,8 @@ public:
      * 正常返回true，异常返回false
      * @return
      */
-    bool write();
+    WriteProcess write();
 
-    /**
-     * 请求处理方法的入口
-     */
-    void process();
 
     /**
      * 关闭链接，清空数据
@@ -168,7 +173,7 @@ public:
      * @param start_line
      * @return
      */
-    HTTP_CODE parse_all();
+    httpDecode parse_all();
 
 
 private:
@@ -197,13 +202,13 @@ private:
      * @param checkStatus
      * @return
      */
-    HTTP_CODE parse_request_line(char* buf);
+    httpDecode parse_request_line(char* buf);
 
     /**
      * 解析 HTTP 请求头字段
      * @param buf
      */
-    HTTP_CODE parse_header(char* buf);
+    httpDecode parse_header(char* buf);
 
 
     void pack_http_respond(int code);
@@ -223,7 +228,7 @@ private:
      * 解析路由
      * 解析会进行http_code状态转移
      */
-    HTTP_CODE decode_route();
+    httpDecode decode_route();
 
 
     /**

@@ -118,8 +118,8 @@ void* TimerHandler::timer_thread_entry(void *arg) {
         exit_error("timer_thread_entry()->read()", true, -1);
     while ( true ){
         printf("loop: %d\n", loop);
-        FD_ZERO(&read_set);
-        FD_SET(pipe2timer_thread[0], &read_set);
+        fd_ZERO(&read_set);
+        fd_SET(pipe2timer_thread[0], &read_set);
         switch( sig ){
             case SLEEP_FOREVER:{
                 sig = sleep_forever();

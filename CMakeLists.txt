@@ -7,8 +7,8 @@ INCLUDE(CMakeForceCompiler)
 #CMAKE_FORCE_CXX_COMPILER(/storage/app/gnu/gcc-8.2.0/bin/g++ GNU)
 
 
-CMAKE_FORCE_C_COMPILER(/usr/bin/gcc-7 GNU)
-CMAKE_FORCE_CXX_COMPILER(/usr/bin/g++-7 GNU)
+#CMAKE_FORCE_C_COMPILER(/usr/bin/gcc-7 GNU)
+#CMAKE_FORCE_CXX_COMPILER(/usr/bin/g++-7 GNU)
 project(WebServer)
 
 set(CMAKE_CXX_STANDARD 14)
