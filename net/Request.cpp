@@ -35,6 +35,7 @@ void Request::init(int fd, int ev) {
     channel_.setfd(fd);
     channel_.setEvent(ev);
     channel_.setUsed(); // channel启用
+    reSet(); //调用本地reSet()
 
 }
 
@@ -42,18 +43,15 @@ void Request::init(int fd, int ev) {
 void Request::close_conn() {
     /* 直接关闭链接 */
     ::close(channel_.getfd());
+    //Log(L_DEBUG) << "close: " << channel_.getfd();
     channel_.reSet();
+
 }
-
-
-
 
 
 Request::~Request(){
     delete [] recv_buf;
 }
-
-
 
 
 bool Request::read(){
@@ -70,6 +68,9 @@ bool Request::read(){
             if ((errno == EAGAIN) || (errno == EWOULDBLOCK)){
                 /* 只有这里是正常读取，此时应该是在EPOLL循环中，将自己加入到线程池中去 */
                 readStatus_ = ReadOk;
+//                std::cout << "recv: " << std::endl;
+//                std::cout << recv_buf << std::endl;
+//                std::cout << "------end-------" << std::endl;
                 return true;
             }
             /* 出错 */
@@ -78,7 +79,7 @@ bool Request::read(){
         }
         /* 对方直接关闭了连接，那就直接关闭即可 */
         if (len == 0){
-            Log(L_INFO) << "remote: " << channel_.getfd() << "closed";
+            //Log(L_INFO) << "recv EOF from" << channel_.getfd();
             readStatus_ = ReadEof;
             return false;
         }
@@ -89,6 +90,9 @@ bool Request::read(){
 
 
 WriteProcess Request::write(){
+//    std::cout << "server send header: " << std::endl;
+//    std::cout << respond_header_ << std::endl;
+//    std::cout << "-------end----------" << std::endl;
     if (!http_header_send_ok){
         int len = 0;
         while ( true ){
@@ -120,6 +124,7 @@ WriteProcess Request::write(){
         }
         if (len == 0){
             if (keep_alive){
+                reSet(); // 重置
                 return WriteOk;
                 //TODO: keep-alive处理，在Request? 还是HttpServer？
             }else{
@@ -131,7 +136,7 @@ WriteProcess Request::write(){
 }
 
 
-Request::HTTP_CODE Request::decode_route() {
+httpDecode Request::decode_route() {
     /* /和空路由直接返回index页面 */
     if ( (strcasecmp(url, "/") == 0) || (url == nullptr)){
         route_ = "index.html";
@@ -193,12 +198,17 @@ void Request::pack_http_respond(int code) {
 
 
 void Request::add_connection() {
-    respond_header_ += connection_;
+
     if (keep_alive){
+        respond_header_ += connection_;
         respond_header_ += "keep-alive\r\n";
+        respond_header_ += "keep-alive: timeout=10, max=1000\r\n";
+        respond_header_ += "Mother: dead\r\n";
         return;
+    }else {
+        respond_header_ += connection_;
+        respond_header_ += "close\r\n";
     }
-    respond_header_ += "close\r\n";
 
 }
 
@@ -208,29 +218,29 @@ void Request::process_send(){
     load_content();
     switch (http_code){
         case GET_REQUEST:{
-            Log(L_INFO) <<channel_.getfd()<<"GET REQUEST"<<version<<url<<header_["Host:"];
+            //Log(L_INFO) <<channel_.getfd()<<"GET REQUEST"<<version<<url<<header_["Host:"];
             pack_http_respond(200); // http包头
-            write(); // 写入由IO线程接管
+            //write(); // 写入由IO线程接管
             break;
         }
         case POST_REQUEST: {
-            Log(L_INFO) <<channel_.getfd() <<"POST REQUEST"<< version<< url<<header_["Host:"];
+            //Log(L_INFO) <<channel_.getfd() <<"POST REQUEST"<< version<< url<<header_["Host:"];
             break;
         }
         case BAD_REQUEST: {
-            Log(L_ERROR) <<channel_.getfd()<< recv_buf;
+            //Log(L_ERROR) <<channel_.getfd()<< recv_buf;
             break;
         }
         case FORBIDDEN_REQUEST:{
-            Log(L_ERROR) <<channel_.getfd()<<"FORBIDDEN"<<version<<url<<header_["Host:"];
+            //Log(L_ERROR) <<channel_.getfd()<<"FORBIDDEN"<<version<<url<<header_["Host:"];
             pack_http_respond(403);
-            write();
+            //write();
             break;
         }
         case INTERNAL_ERROR:{
-            Log(L_ERROR) <<channel_.getfd()<<route_<<recv_buf;
+            //Log(L_ERROR) <<channel_.getfd()<<route_<<recv_buf;
             pack_http_respond(500);
-            write();
+            //write();
             break;
         }
         case CLOSED_CONNECTION:
@@ -238,9 +248,9 @@ void Request::process_send(){
         case INCOMPLETE_REQUEST:
             break;
         case NOT_FOUND:{
-            Log(L_ERROR) <<channel_.getfd()<<"404 NOTFOUND"<<version<<route_<<header_["Host:"];
+            //Log(L_ERROR) <<channel_.getfd()<<"404 NOTFOUND"<<version<<route_<<header_["Host:"];
             pack_http_respond(404);
-            write();
+            //write();
             break;
         }
         default:
@@ -255,7 +265,7 @@ void Request::time_out(void *arg) {
     delete request;
 }
 
-Request::LINE_STATUS Request::parse_line() {
+LINE_STATUS Request::parse_line() {
 
     for (; checked_index <= read_index; ++checked_index ){
         if (recv_buf[checked_index] == '\r'){
@@ -292,7 +302,7 @@ Request::LINE_STATUS Request::parse_line() {
 }
 
 
-Request::HTTP_CODE Request::parse_request_line(char *buf) {
+httpDecode Request::parse_request_line(char *buf) {
     /* 返回指向第一个空格或者\t的位子 */
     url = strpbrk(buf, " \t");
     if (!url)
@@ -325,7 +335,7 @@ Request::HTTP_CODE Request::parse_request_line(char *buf) {
 }
 
 
-Request::HTTP_CODE Request::parse_header(char *buf) {
+httpDecode Request::parse_header(char *buf) {
     char *tmp = buf;
     /* 这一行是最后一行 */
     if ( tmp[0] == '\0' )
@@ -344,6 +354,13 @@ Request::HTTP_CODE Request::parse_header(char *buf) {
         header_["Connection"] = tmp;
         keep_alive = strncasecmp(tmp, "keep-alive", 10) == 0 ||
                      strncasecmp(tmp, "Keep-Alive", 10) == 0;
+        if (strncasecmp(version, "HTTP/1.1", 8) == 0){
+            keep_alive = true;
+            std::cout << "HTTP/1.1 default keep-alive" << std::endl;
+        }else{
+            std::cout << "HTTP/1.1 error!" << std::endl;
+        }
+
     }else if ( strncasecmp(tmp, "Accept:", 7) == 0){
         tmp += 7;
         tmp += strspn(tmp, " \t");
@@ -358,10 +375,10 @@ Request::HTTP_CODE Request::parse_header(char *buf) {
 }
 
 
-Request::HTTP_CODE Request::parse_all() {
+httpDecode Request::parse_all() {
 
     lineStatus = LINE_OK;
-    HTTP_CODE retCode;
+    httpDecode retCode;
     /* 行正确就一只解析下去 */
     while ( (lineStatus = parse_line()) == LINE_OK ){
         char *tmp = recv_buf + start_line;
@@ -397,7 +414,7 @@ Request::HTTP_CODE Request::parse_all() {
 }
 
 
-void Request::init(){
+void Request::reSet() {
     checkStatus = CHECK_REQUEST_LINE;
     lineStatus = LINE_OK;
     read_index = 0;

@@ -19,12 +19,9 @@ set(CMAKE_BUILD_TYPE DEBUG)
 
 add_executable(WebServer main.cpp
     utility.h
-        Thread/ThreadPool.h Thread/ThreadPool.cpp
+#        Thread/ThreadPool.h Thread/ThreadPool.cpp
         net/Request.h net/Request.cpp
         net/Mime.h net/Mime.cpp
-        Timer/TimerNode.h Timer/TimerNode.cpp
-        Timer/TimerHeap.h Timer/TimerHeap.cpp
-        Timer/TimerHandler.h Timer/TimerHandler.cpp
         base/Mutex.h base/Condition.h base/Condition.cpp
         base/Log.h base/Log.cpp base/AsyncLog.h base/AsyncLog.cpp
         base/Buffer.h base/Buffer.cpp

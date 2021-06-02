@@ -27,18 +27,19 @@ void HttpServer::netWorkInit(int port) {
     int reuse = 1;
     setsockopt(listenfd_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int));
     if (::bind(listenfd_, (sockaddr*)&local_addr_, sizeof local_addr_) < 0){
-        Log(L_FATAL) << "bind() error!";
+       // Log(L_FATAL) << "bind() error!";
     }
     if (::listen(listenfd_, 5) < 0){
-        Log(L_FATAL) << "listen() error!";
+        //Log(L_FATAL) << "listen() error!";
     }
-    Log(L_DEBUG)<< "netWork init OK";
+    //Log(L_DEBUG)<< "netWork init OK";
 }
 
 
-HttpServer::HttpServer(EpollPoll *poller, int Count=10000)
+HttpServer::HttpServer(EpollPoll *poller)
 :   poller_(poller),
-    listenChannel_(new Channel)
+    listenChannel_(new Channel),
+    quit_(false)
 {
     listenChannel_->setfd(listenfd_);
     listenChannel_->setEvent(EPOLLIN );
@@ -47,7 +48,7 @@ HttpServer::HttpServer(EpollPoll *poller, int Count=10000)
             ); // listenfd的读取回调函数就是accept事件
     poller_->update(EPOLL_CTL_ADD, listenChannel_); // 添加监听套接字
     //启动线程？
-    kRequestCount_ = Count;
+    kRequestCount_ = 10000; /* 暂定 */
     for (int i=0; i<kRequestCount_; i++){
         queue_.push_back(new Request);
     }
@@ -57,7 +58,13 @@ HttpServer::HttpServer(EpollPoll *poller, int Count=10000)
 
 
 HttpServer::~HttpServer() {
-
+    assert(quit_);
+    /* 清空队列 */
+    while (!queue_.empty()){
+        auto node = queue_.front();
+        queue_.pop_front();
+        delete node;
+    }
 }
 
 
@@ -65,12 +72,13 @@ void HttpServer::start() {
 
     pool_ = new ThreadPool;
 
-    pool_->start(2);
-    Log(L_DEBUG) << "thread pool init OK";
+    pool_->start(4);
+    //Log(L_DEBUG) << "thread pool init OK";
     //在这里启动线程
     // 之后进入主循环
-    Log(L_DEBUG) << "enter loop";
+    //Log(L_DEBUG) << "enter loop";
     poller_->loop();
+    quit_ = true;
 }
 
 
@@ -79,13 +87,20 @@ void HttpServer::AcceptClient() {
     memset(&remote_addr, 0, sizeof remote_addr);
     socklen_t remote_addr_sz = sizeof remote_addr;
     int sockfd = ::accept(listenfd_, (sockaddr*)&remote_addr, &remote_addr_sz);
-    Log(L_DEBUG) << "accept new client" << sockfd;
-    if (sockfd < 0)
-        Log(L_ERROR) << "accept fd error";
+    //Log(L_DEBUG) << "accept new client" << sockfd;
+    if (sockfd < 0) {
+        //Log(L_ERROR) << "accept fd error";
+    }
     else{
         if (queue_.empty()){
             expand();
             std::cout << "TODO:expand()" << std::endl;
+        }
+
+        while (queue_.front() == nullptr){
+            std::cout << "queue empty" << std::endl;
+            std::cout << queue_.size() << std::endl;
+            sleep(1);
         }
         auto request = queue_.front();
         queue_.pop_front();
@@ -93,33 +108,33 @@ void HttpServer::AcceptClient() {
         request->init(sockfd, EPOLLIN | EPOLLET | EPOLLONESHOT);
         /* 设置回调函数 */
         request->channel_.setReadCallBack(
-                std::bind(&HttpServer::readEvent, this, &request->channel_));
+                std::bind(&HttpServer::readEvent, this, request));
         request->channel_.setWriteCallBack(
-                std::bind(&HttpServer::writeEvent, this, &request->channel_));
+                std::bind(&HttpServer::writeEvent, this, request));
         request->channel_.setErrorCallBack(
-                std::bind(&HttpServer::errorEvent, this, &request->channel_));
+                std::bind(&HttpServer::errorEvent, this, request));
         poller_->update(EPOLL_CTL_ADD, &request->channel_); // 添加到epoll中去
-        auto iter = map_.find(&request->channel_);
-        assert(iter == map_.end()); // for debug
-        mapNode node(&request->channel_, request);
-        map_.insert(node);
+
+//        auto iter = map_.find(&request->channel_);
+//        assert(iter == map_.end()); // for debug
+//        mapNode node(&request->channel_, request);
+//        map_.insert(node);
     }
 }
 
 
-void HttpServer::readEvent(Channel* channel) {
-    auto iter = map_.find(channel);
-    assert(iter != map_.end());
-    if (iter->second->read()) {
+void HttpServer::readEvent(Request* request) {
+    Channel* channel = &request->channel_;
+    bool ret = request->read();
+    if ( ret ) {
         pool_->put(
-                std::bind(&HttpServer::process, this, iter->second)
+                std::bind(&HttpServer::process, this, request)
         ); // 解析HTTP
     }else{
         /* close */
-        iter->second->close_conn();
-        poller_->update(EPOLL_CTL_DEL, iter->first); // 从epoll中删除
-        map_.erase(iter); // 清空map_
-        queue_.push_back(&*iter->second); // 重新加入到队列中去
+        request->close_conn();
+        poller_->update(EPOLL_CTL_DEL, channel); // 从epoll中删除
+        queue_.push_back(request); // 重新加入到队列中去
     }
 
 }
@@ -133,39 +148,43 @@ void HttpServer::process(Request* request) {
     }
     /* 发送信息 */
     request->process_send();
+    writeEvent(request);
 
 }
 
-void HttpServer::errorEvent(Channel *channel) {
-    auto iter = map_.find(channel);
-    assert(iter != map_.end() );
-    iter->second->close_conn();
-    poller_->update(EPOLL_CTL_DEL, iter->first);
-    map_.erase(iter);
-    queue_.push_back(&*iter->second);
-
+void HttpServer::errorEvent(Request* request) {
+    Channel* channel = &request->channel_;
+    request->close_conn();
+    poller_->update(EPOLL_CTL_DEL, channel);
+    queue_.push_back(request);
 }
 
-
-void HttpServer::writeEvent(Channel* channel) {
-    auto iter = map_.find(channel);
-    assert(iter != map_.end());
-    WriteProcess ret = iter->second->write();
+/* write Event可能由IO线程调用，也有可能由子线程处理 */
+void HttpServer::writeEvent(Request* request) {
+    Channel* channel = &request->channel_;
+    WriteProcess ret = request->write();
     if ( ret == WriteIncomplete){
         poller_->update(EPOLL_CTL_MOD, channel);
         return;
     }
     if ( ret == WriteError ){
         /* 出错，直接进行删除操作 */
-        iter->second->close_conn();
+        request->close_conn();
         poller_->update(EPOLL_CTL_DEL, channel);
-        map_.erase(iter);
-        queue_.push_back(&*iter->second);
+        queue_.push_back(request);
         return;
     }
     if ( ret == WriteOk ){
         /* keep-alive状态和正常关闭?，设置定时器？ */
-        return;
+        /* 暂时直接关闭 */
+        if (request->keep_alive){
+            poller_->update(EPOLL_CTL_MOD, channel);
+        }else {
+            request->close_conn();
+            poller_->update(EPOLL_CTL_DEL, channel);
+            queue_.push_back(request);
+        }
+
     }
 }
 

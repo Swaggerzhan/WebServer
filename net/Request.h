@@ -63,8 +63,6 @@ class Request {
 public:
 
 
-
-
     static const std::string code_200_;
     static const std::string code_403_;
     static const std::string code_404_;
@@ -183,7 +181,7 @@ private:
      * 数据初始化准备，每次HTTP请求结束都应该重新加载此次操作
      * 主要是将Request中checked_index等一些维护HTTP解析数据重制
      */
-    void init();
+    void reSet();
 
     /**
      * 行解析函数
@@ -243,9 +241,6 @@ private:
      * @return
      */
     bool check_dot(char *msg);
-
-
-
 
 
 };

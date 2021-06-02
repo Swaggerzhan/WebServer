@@ -27,8 +27,9 @@ EpollPoll::EpollPoll(int maxOpen)
     wakeupfd_(create_eventfd()),
     threadID_(pthread_self())
 {
-    if (epfd_ < 0)
-        Log(L_FATAL) << "epoll create error!";
+    if (epfd_ < 0) {
+        //Log(L_FATAL) << "epoll create error!";
+    }
     kMaxOpen = maxOpen;
     event_.reserve(kMaxOpen);
     wakeChannel_ = new Channel();
@@ -53,25 +54,26 @@ EpollPoll::~EpollPoll() {
 
 void EpollPoll::wakeup() {
     uint64_t one = 0;
-    Log(L_INFO) << "wakeup called!";
+    //Log(L_INFO) << "wakeup called!";
     int ret = ::write(wakeupfd_, &one, sizeof one);
-    if ( ret != sizeof one )
-        Log(L_FATAL) << "wakeup write error!";
+    if ( ret != sizeof one ){
+        //Log(L_FATAL) << "wakeup write error!";
+    }
 }
 
 
 void EpollPoll::poll() {
     int ret = epoll_wait(epfd_, &*event_.begin(), kMaxOpen, 10);
     if (ret < 0){
-        if (errno == EINTR)
-            Log(L_DEBUG) << "epoll_wait ret EINTR could be debug";
-        else{
+        if (errno == EINTR) {
+            //Log(L_DEBUG) << "epoll_wait ret EINTR could be debug";
+        } else{
             printf("%s\n", strerror(errno));
         }
     }else if (ret == 0){
         //Log(L_DEBUG) << "epoll_wait nothing happened";
     }else {
-        Log(L_DEBUG) << "new connection";
+        //Log(L_DEBUG) << "new connection";
         isHandlingCallBack = true; // 直接处理回调函数
         for (int i=0; i<ret; i++){
             auto* channel = static_cast<Channel*>(event_[i].data.ptr);
@@ -124,9 +126,7 @@ void EpollPoll::update(int op, Channel *channel) {
         event.data.ptr = channel;
         event.events = channel->getEvent();
         epoll_ctl(epfd_, op, channel->getfd(), &event);
-        assert(!channel->getIsUsed()); // 还未被使用
-        channel->setUsed(); // channel 已经被使用
-        Log(L_DEBUG) << "add fd:" << channel->getfd();
+        //Log(L_DEBUG) << "add fd:" << channel->getfd();
     }else if (op == EPOLL_CTL_DEL){
         epoll_ctl(epfd_, op, channel->getfd(), nullptr);
         channel->reSet(); // 将channel重置
@@ -135,10 +135,8 @@ void EpollPoll::update(int op, Channel *channel) {
         event.data.ptr = channel;
         event.events = channel->getEvent();
         epoll_ctl(epfd_, op, channel->getfd(), &event);
-        assert(!channel->getIsUsed()); // 还未被使用
-        channel->setUsed(); // channel 已经被使用
     }else{
-        Log(L_DEBUG) << "unknown bug in EpollPoll::update";
+        //Log(L_DEBUG) << "unknown bug in EpollPoll::update";
     }
 }
 

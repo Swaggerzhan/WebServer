@@ -5,6 +5,7 @@
 #include "Channel.h"
 #include <sys/epoll.h>
 #include <cassert>
+#include <fcntl.h>
 
 
 Channel::Channel()
@@ -17,17 +18,9 @@ Channel::Channel()
 }
 
 
-
-
 Channel::~Channel() {
 
 }
-
-
-
-
-
-
 
 
 void Channel::setEvent(int ev) {
@@ -45,6 +38,10 @@ void Channel::setRetEvent(int ev) {
 
 void Channel::setUsed() {
     isUsed_ = true;
+    /* 非阻塞io */
+    int fd = fcntl(fd_, F_GETFL);
+    fd |= O_NONBLOCK;
+    fcntl(fd_, F_SETFL, fd);
 }
 
 /* 重置 */

@@ -14,7 +14,8 @@ AsyncLog* Log::asyncLog = nullptr;
 
 
 Log::Log(LOGLEVEL loglevel)
-:   time_(TimeStamp::now())
+:   time_(TimeStamp::now()),
+    log_()
 {
     switch (loglevel){
         case L_INFO:{
