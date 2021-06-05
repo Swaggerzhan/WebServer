@@ -27,7 +27,7 @@ add_executable(WebServer main.cpp
         base/Buffer.h base/Buffer.cpp
         base/TimeStamp.h base/TimeStamp.cpp
 
-
+        base/BlockQueue.cpp base/BlockQueue.h
 
         base/CountDownLatch.h base/CountDownLatch.cpp
 
@@ -36,7 +36,7 @@ add_executable(WebServer main.cpp
 
         net/EpollPoll.h net/EpollPoll.cpp
 
-        net/Channel.h net/Channel.cpp net/HttpServer.cpp net/HttpServer.h)
+        net/Channel.h net/Channel.cpp net/HttpServer.cpp net/HttpServer.h )
 
 find_package(Threads)
 target_link_libraries(WebServer ${CMAKE_THREAD_LIBS_INIT})

@@ -13,7 +13,7 @@
 
 int HttpServer::listenfd_ = -1;
 int HttpServer::port_ = -1;
-int HttpServer::kRequestCount_ = 10000;
+int HttpServer::kRequestCount_ = 1000;
 sockaddr_in HttpServer::local_addr_;
 
 
@@ -39,7 +39,8 @@ void HttpServer::netWorkInit(int port) {
 HttpServer::HttpServer(EpollPoll *poller)
 :   poller_(poller),
     listenChannel_(new Channel),
-    quit_(false)
+    quit_(false),
+    queue_(10)
 {
     listenChannel_->setfd(listenfd_);
     listenChannel_->setEvent(EPOLLIN );
@@ -48,11 +49,13 @@ HttpServer::HttpServer(EpollPoll *poller)
             ); // listenfd的读取回调函数就是accept事件
     poller_->update(EPOLL_CTL_ADD, listenChannel_); // 添加监听套接字
     //启动线程？
-    kRequestCount_ = 10000; /* 暂定 */
+    kRequestCount_ = 1000; /* 暂定 */
     for (int i=0; i<kRequestCount_; i++){
-        queue_.push_back(new Request);
+        //queue_.push_back(new Request);
+        queue_.append(new Request);
     }
     start();
+    request_count = kRequestCount_;
 
 }
 
@@ -60,10 +63,8 @@ HttpServer::HttpServer(EpollPoll *poller)
 HttpServer::~HttpServer() {
     assert(quit_);
     /* 清空队列 */
-    while (!queue_.empty()){
-        auto node = queue_.front();
-        queue_.pop_front();
-        delete node;
+    while (!queue_.isEmpty()){
+        delete queue_.pop();
     }
 }
 
@@ -72,7 +73,7 @@ void HttpServer::start() {
 
     pool_ = new ThreadPool;
 
-    pool_->start(4);
+    pool_->start(6);
     //Log(L_DEBUG) << "thread pool init OK";
     //在这里启动线程
     // 之后进入主循环
@@ -92,18 +93,19 @@ void HttpServer::AcceptClient() {
         //Log(L_ERROR) << "accept fd error";
     }
     else{
-        if (queue_.empty()){
+        if (queue_.isEmpty()){
             expand();
             std::cout << "TODO:expand()" << std::endl;
         }
 
-        while (queue_.front() == nullptr){
-            std::cout << "queue empty" << std::endl;
-            std::cout << queue_.size() << std::endl;
-            sleep(1);
-        }
-        auto request = queue_.front();
-        queue_.pop_front();
+//        while (queue_.front() == nullptr){
+//            std::cout << "queue empty" << std::endl;
+//            std::cout << queue_.size() << std::endl;
+//            std::cout << "count:" << request_count << std::endl;
+//            sleep(1);
+//        }
+        auto request = queue_.pop();
+        request_count --;
         assert(!request->channel_.getIsUsed()); // channel是未使用状态
         request->init(sockfd, EPOLLIN | EPOLLET | EPOLLONESHOT);
         /* 设置回调函数 */
@@ -134,7 +136,7 @@ void HttpServer::readEvent(Request* request) {
         /* close */
         request->close_conn();
         poller_->update(EPOLL_CTL_DEL, channel); // 从epoll中删除
-        queue_.push_back(request); // 重新加入到队列中去
+        queue_.append(request); // 重新加入到队列中去
     }
 
 }
@@ -156,7 +158,7 @@ void HttpServer::errorEvent(Request* request) {
     Channel* channel = &request->channel_;
     request->close_conn();
     poller_->update(EPOLL_CTL_DEL, channel);
-    queue_.push_back(request);
+    queue_.append(request);
 }
 
 /* write Event可能由IO线程调用，也有可能由子线程处理 */
@@ -171,7 +173,8 @@ void HttpServer::writeEvent(Request* request) {
         /* 出错，直接进行删除操作 */
         request->close_conn();
         poller_->update(EPOLL_CTL_DEL, channel);
-        queue_.push_back(request);
+        queue_.append(request);
+        request_count ++;
         return;
     }
     if ( ret == WriteOk ){
@@ -182,7 +185,8 @@ void HttpServer::writeEvent(Request* request) {
         }else {
             request->close_conn();
             poller_->update(EPOLL_CTL_DEL, channel);
-            queue_.push_back(request);
+            request_count ++;
+            queue_.append(request);
         }
 
     }

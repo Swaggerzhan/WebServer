@@ -11,12 +11,13 @@
 #include <arpa/inet.h>
 #include <deque>
 #include <map>
-
+#include "../base/BlockQueue.h"
 
 class EpollPoll;
 class Channel;
 class Request;
 class ThreadPool;
+
 
 class HttpServer {
 public:
@@ -53,13 +54,16 @@ private:
 
     bool quit_; // 是否退出
 
-    std::deque<Request*> queue_; // 处于queue_中的所有对象都是处于空闲状态
+    //std::deque<Request*> queue_; // 处于queue_中的所有对象都是处于空闲状态
+    BlockQueue<Request*> queue_;
+
     std::map<Channel*, Request*> map_; // 通过Channel 索引 Request
 
     static int listenfd_;
     static int port_;
     static sockaddr_in local_addr_;
     static int kRequestCount_;
+    int request_count;
 
     EpollPoll* poller_;
     Channel* listenChannel_;

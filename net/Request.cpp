@@ -68,6 +68,7 @@ bool Request::read(){
             if ((errno == EAGAIN) || (errno == EWOULDBLOCK)){
                 /* 只有这里是正常读取，此时应该是在EPOLL循环中，将自己加入到线程池中去 */
                 readStatus_ = ReadOk;
+               // std::cout << recv_buf << std::endl;
 //                std::cout << "recv: " << std::endl;
 //                std::cout << recv_buf << std::endl;
 //                std::cout << "------end-------" << std::endl;
@@ -125,9 +126,11 @@ WriteProcess Request::write(){
         if (len == 0){
             if (keep_alive){
                 reSet(); // 重置
+                close(file_fd);
                 return WriteOk;
                 //TODO: keep-alive处理，在Request? 还是HttpServer？
             }else{
+                close(file_fd);
                 return WriteOk;
             }
         }
@@ -417,6 +420,7 @@ httpDecode Request::parse_all() {
 void Request::reSet() {
     checkStatus = CHECK_REQUEST_LINE;
     lineStatus = LINE_OK;
+    http_code = GET_REQUEST;
     read_index = 0;
     checked_index = 0;
     start_line = 0;
