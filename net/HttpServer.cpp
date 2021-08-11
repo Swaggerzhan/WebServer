@@ -40,7 +40,7 @@ HttpServer::HttpServer(EpollPoll *poller)
 :   poller_(poller),
     listenChannel_(new Channel),
     quit_(false),
-    queue_(10)
+    queue_(10000)
 {
     listenChannel_->setfd(listenfd_);
     listenChannel_->setEvent(EPOLLIN );
@@ -126,6 +126,7 @@ void HttpServer::AcceptClient() {
 
 
 void HttpServer::readEvent(Request* request) {
+    //std::cout << "readEvent" << std::endl;
     Channel* channel = &request->channel_;
     bool ret = request->read();
     if ( ret ) {
@@ -166,6 +167,8 @@ void HttpServer::writeEvent(Request* request) {
     Channel* channel = &request->channel_;
     WriteProcess ret = request->write();
     if ( ret == WriteIncomplete){
+        channel->setEvent(EPOLLOUT); // 添加写事件
+        //std::cout << "try to update fd" << std::endl;
         poller_->update(EPOLL_CTL_MOD, channel);
         return;
     }
@@ -180,6 +183,8 @@ void HttpServer::writeEvent(Request* request) {
     if ( ret == WriteOk ){
         /* keep-alive状态和正常关闭?，设置定时器？ */
         /* 暂时直接关闭 */
+//        request->close_conn();
+//        queue_.append(request);
         if (request->keep_alive){
             poller_->update(EPOLL_CTL_MOD, channel);
         }else {

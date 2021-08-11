@@ -71,6 +71,7 @@ public:
     static const std::string server_;
     static const std::string content_length_;
     static const std::string connection_;
+    static const std::string route_dir_;
 
     Channel channel_; // Request中所保存的频道
 

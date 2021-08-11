@@ -19,6 +19,7 @@ const std::string Request::content_type_ = "Content-Type: ";
 const std::string Request::server_ = "Server: MyWebServer/1.0.0 (Ubuntu)\r\n";
 const std::string Request::content_length_ = "Content-Length: ";
 const std::string Request::connection_ = "Connection: ";
+const std::string Request::route_dir_ = "index_page/";
 Mime Request::mime_;
 
 const int Request::recv_buf_size = 4096;
@@ -118,12 +119,18 @@ WriteProcess Request::write(){
                 &file_already_send_index, file_length-file_already_send_index);
         if (len < 0){
             if ( (errno == EAGAIN) || (errno == EWOULDBLOCK) ){
+                //std::cout << "WriteIncomplete" << std::endl;
                 return WriteIncomplete;
             }else{
+                std::cout << "WriteError: " << strerror(errno) << std::endl;
                 return WriteError;
             }
         }
         if (len == 0){
+//            reSet();
+//            close(file_fd);
+//            //std::cout << "send len: " << file_already_send_index << std::endl;
+//            return WriteOk;
             if (keep_alive){
                 reSet(); // 重置
                 close(file_fd);
@@ -142,7 +149,7 @@ WriteProcess Request::write(){
 httpDecode Request::decode_route() {
     /* /和空路由直接返回index页面 */
     if ( (strcasecmp(url, "/") == 0) || (url == nullptr)){
-        route_ = "index.html";
+        route_ = route_dir_ + "index.html";
         return GET_REQUEST;
     }
     if (url[0] == '/')
@@ -152,7 +159,7 @@ httpDecode Request::decode_route() {
     if (check_dot(url)){
         return FORBIDDEN_REQUEST;
     }
-    route_ = url;
+    route_ = route_dir_ + url;
     return GET_REQUEST;
 }
 
@@ -164,17 +171,17 @@ void Request::load_content() {
         switch (errno){
             case ENOENT:{
                 http_code = NOT_FOUND;
-                route_ = "404.html";
+                route_ = route_dir_ + "404.html";
                 break;
             }
             case EACCES:{
                 http_code = FORBIDDEN_REQUEST;
-                route_ = "403.html";
+                route_ = route_dir_ + "403.html";
                 break;
             }
             default:{
                 http_code = INTERNAL_ERROR;
-                route_ = "500.html";
+                route_ = route_dir_ + "500.html";
                 break;
             }
         }
@@ -197,6 +204,8 @@ void Request::pack_http_respond(int code) {
     add_connection();
     add_server();
     respond_header_ += "\r\n";
+    //std::cout << respond_header_ << std::endl;
+
 }
 
 
@@ -359,9 +368,9 @@ httpDecode Request::parse_header(char *buf) {
                      strncasecmp(tmp, "Keep-Alive", 10) == 0;
         if (strncasecmp(version, "HTTP/1.1", 8) == 0){
             keep_alive = true;
-            std::cout << "HTTP/1.1 default keep-alive" << std::endl;
+            //std::cout << "HTTP/1.1 default keep-alive" << std::endl;
         }else{
-            std::cout << "HTTP/1.1 error!" << std::endl;
+            //std::cout << "HTTP/1.1 error!" << std::endl;
         }
 
     }else if ( strncasecmp(tmp, "Accept:", 7) == 0){

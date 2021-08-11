@@ -91,7 +91,7 @@ int network_init();
 int main(){
 //    AsyncLog log;
 //    Log::asyncLog = &log;
-    HttpServer::netWorkInit(8080);
+    HttpServer::netWorkInit(80);
     // channel count
     EpollPoll poller(10000);
     HttpServer httpServer(&poller);
