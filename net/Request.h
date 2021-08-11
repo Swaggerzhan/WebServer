@@ -18,6 +18,9 @@
 #include <map>
 #include "Channel.h"
 
+class Cache;
+
+
 enum CHECK_STATUS{
     CHECK_REQUEST_LINE,
     CHECK_HEADER,
@@ -110,13 +113,14 @@ public:
 
     int file_fd; // 请求目标文件fd
 
+    Cache* cache_; // 缓存
 
 public:
 
     /**
      * 请求方法
      */
-    Request();
+    Request(Cache* cache);
 
     ~Request();
 

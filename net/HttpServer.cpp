@@ -9,6 +9,7 @@
 #include "../base/Log.h"
 #include <cstring>
 #include "../base/ThreadPool.h"
+#include "../base/Cache.h"
 
 
 int HttpServer::listenfd_ = -1;
@@ -40,7 +41,8 @@ HttpServer::HttpServer(EpollPoll *poller)
 :   poller_(poller),
     listenChannel_(new Channel),
     quit_(false),
-    queue_(10000)
+    queue_(10000),
+    cache_(new Cache())
 {
     listenChannel_->setfd(listenfd_);
     listenChannel_->setEvent(EPOLLIN );
@@ -52,7 +54,7 @@ HttpServer::HttpServer(EpollPoll *poller)
     kRequestCount_ = 1000; /* 暂定 */
     for (int i=0; i<kRequestCount_; i++){
         //queue_.push_back(new Request);
-        queue_.append(new Request);
+        queue_.append(new Request(cache_));
     }
     start();
     request_count = kRequestCount_;

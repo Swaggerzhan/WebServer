@@ -17,6 +17,7 @@ class EpollPoll;
 class Channel;
 class Request;
 class ThreadPool;
+class Cache;
 
 
 class HttpServer {
@@ -68,6 +69,7 @@ private:
     EpollPoll* poller_;
     Channel* listenChannel_;
     ThreadPool* pool_; // 线程池
+    Cache* cache_;      // 缓存
 
 };
 

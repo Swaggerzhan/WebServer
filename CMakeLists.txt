@@ -38,7 +38,7 @@ add_executable(WebServer main.cpp
 
         net/EpollPoll.h net/EpollPoll.cpp
 
-        net/Channel.h net/Channel.cpp net/HttpServer.cpp net/HttpServer.h net/Redis.h net/Redis.cpp)
+        net/Channel.h net/Channel.cpp net/HttpServer.cpp net/HttpServer.h net/Redis.h net/Redis.cpp base/Cache.h base/Cache.cpp)
 
 find_package(Threads)
 target_link_libraries(WebServer ${CMAKE_THREAD_LIBS_INIT})

@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <malloc.h>
 #include <sys/socket.h>
-
+#include "../base/Cache.h"
 
 
 const std::string Request::code_200_ = "HTTP/1.1 200 OK\r\n";
@@ -25,8 +25,9 @@ Mime Request::mime_;
 const int Request::recv_buf_size = 4096;
 
 
-Request::Request()
-:   channel_()
+Request::Request(Cache* cache)
+:   channel_(),
+    cache_(cache)
 {
     recv_buf = new char[recv_buf_size];
     //recv_buf = (char*)malloc(recv_buf_size);
@@ -165,6 +166,10 @@ httpDecode Request::decode_route() {
 
 
 void Request::load_content() {
+
+//    int* len = new int;
+//    char* buf = cache_->getCache(route_, len);
+
 
     file_fd = open(route_.c_str(), O_RDONLY);
     if (file_fd < 0){
