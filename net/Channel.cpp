@@ -6,13 +6,25 @@
 #include <sys/epoll.h>
 #include <cassert>
 #include <fcntl.h>
+#include <unistd.h>
+#include "Request.h"
 
-
-Channel::Channel()
+Channel::Channel(Request *request)
 :   fd_(-1),
     event_(0),
     retEvent_(0),
-    isUsed_(false)
+    isUsed_(false),
+    request(request)
+{
+
+}
+
+Channel::Channel() // for listen channel
+        :   fd_(-1),
+            event_(0),
+            retEvent_(0),
+            isUsed_(false),
+            request(nullptr)
 {
 
 }
@@ -52,17 +64,21 @@ void Channel::reSet() {
     isUsed_ = false;
     event_ = 0;
     retEvent_ = 0;
+    // 尝试
+//    if ( fd_ == 0 )
+//        std::cout << "close fd: " << fd_ << std::endl;
+    ::close(fd_);
     fd_ = -1;
 }
 
 
 /* 通过返回的事件调用回调函数 */
 void Channel::handleEvent() {
-    if ( retEvent_ & (EPOLLERR) ){
+    if ( retEvent_ & (EPOLLERR | EPOLLHUP | EPOLLRDHUP) ){
         if (errorCallBack)
             errorCallBack();
     }
-    if ( retEvent_ & (EPOLLIN | EPOLLPRI | EPOLLRDHUP)){
+    if ( retEvent_ & (EPOLLIN | EPOLLPRI )){
         if (readCallBack)
             readCallBack();
     }

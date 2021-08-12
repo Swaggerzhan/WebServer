@@ -18,7 +18,8 @@ public:
 
     char* getCache(std::string key, int* len);
 
-    bool hasFile(std::string key);
+    /* 返回errno */
+    int hasFile(std::string& key);
 
 
 private:

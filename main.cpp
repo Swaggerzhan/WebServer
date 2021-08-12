@@ -86,11 +86,27 @@ int network_init();
 //
 //
 //}
+#include <unistd.h>
+#include <fcntl.h>
 
 
 int main(){
 //    AsyncLog log;
 //    Log::asyncLog = &log;
+//    int fd = open("/dev/null", O_RDONLY);
+//    int ret = dup2(fd, STDIN_FILENO);
+//    close(fd);
+//    if ( ret == 0){
+//        std::cout << "0 is used!" << std::endl;
+//    }else{
+//        std::cout << "not!" << std::endl;
+//    }
+//    std::cout << "stdin: " << STDIN_FILENO << std::endl;
+
+    close(STDIN_FILENO);
+    open("/dev/null", O_RDONLY);
+
+
     HttpServer::netWorkInit(80);
     // channel count
     EpollPoll poller(10000);

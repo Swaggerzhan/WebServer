@@ -8,6 +8,8 @@
 #include "Channel.h"
 #include "../base/Mutex.h"
 #include <cstring>
+#include "Request.h"
+#include "../base/Cache.h"
 
 int EpollPoll::kMaxOpen = 10000;
 
@@ -25,11 +27,18 @@ EpollPoll::EpollPoll(int maxOpen)
 :   epfd_(epoll_create(5)),
     quit_(false),
     wakeupfd_(create_eventfd()),
-    threadID_(pthread_self())
+    threadID_(pthread_self()),
+    cache_(new Cache),
+    queue_(100000)
 {
     if (epfd_ < 0) {
         //Log(L_FATAL) << "epoll create error!";
     }
+
+    for (int i=0; i<100000; i++){
+        queue_.append(new Request(cache_));
+    }
+
     kMaxOpen = maxOpen;
     event_.reserve(kMaxOpen);
     wakeChannel_ = new Channel();
@@ -49,6 +58,10 @@ EpollPoll::~EpollPoll() {
 //    }
     delete wakeChannel_;
 
+}
+
+BlockQueue<Request*>* EpollPoll::getQueue() {
+    return &queue_;
 }
 
 
@@ -86,9 +99,10 @@ void EpollPoll::poll() {
 
 /* thread safe: 更多情况下其实是其他线程所调用的 */
 void EpollPoll::runInLoop(EpollPoll::Functor cb) {
-    if ( threadID_ == pthread_self()){ //  本线程中
+    if ( threadID_ == pthread_self() ){ //  主线程中
         cb();
     }else {
+        //std::cout << "no in main thread add to queue" << std::endl;
         /* 如果不是本线程中运行，加入到回调函数中 */
         MutexLockGuard lock(mutex_);
         callBackQueue_.push_back(std::move(cb));
@@ -121,6 +135,9 @@ void EpollPoll::doPendingFunctor() {
 
 /* 更新channel在epoll中的状态 */
 void EpollPoll::update(int op, Channel *channel) {
+    if ( threadID_ != pthread_self() ){
+        std::cout << "not in main thread!" << std::endl;
+    }
     if (op == EPOLL_CTL_ADD ){
         epoll_event event{};
         event.data.ptr = channel;
@@ -128,8 +145,12 @@ void EpollPoll::update(int op, Channel *channel) {
         epoll_ctl(epfd_, op, channel->getfd(), &event);
         //Log(L_DEBUG) << "add fd:" << channel->getfd();
     }else if (op == EPOLL_CTL_DEL){
+        if ( threadID_ != pthread_self() ){
+            std::cout << "not in main thread!" << std::endl;
+        }
         epoll_ctl(epfd_, op, channel->getfd(), nullptr);
-        channel->reSet(); // 将channel重置
+        channel->reSet(); // 将channel重置 其中有关闭操作
+        queue_.append(channel->request);
     }else if (op == EPOLL_CTL_MOD ){ // MOD和ADD区别？
         epoll_event event{};
         event.data.ptr = channel;

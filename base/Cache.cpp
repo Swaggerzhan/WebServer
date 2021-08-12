@@ -38,6 +38,7 @@ bool Cache::addCache(string key) {
         // 持续读
     }
     map_.insert(KeyValue(key, page));
+    ::close(fd);
     return true;
 }
 
@@ -49,6 +50,20 @@ char* Cache::getCache(string key, int *len) {
         return nullptr;
     *len = iter->second->len;
     return iter->second->buf;
+}
+
+
+int Cache::hasFile(string& key) {
+    {
+        MutexLockGuard lock(mutex_);
+        if (map_.find(key) != map_.end() )
+            return 0;
+    }
+    int fd = open(key.c_str(), O_RDONLY);
+    if ( fd < 0 )
+        return errno;
+    close(fd);
+    return 0;
 }
 
 

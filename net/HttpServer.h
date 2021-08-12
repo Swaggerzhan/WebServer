@@ -32,7 +32,7 @@ public:
 
     static void netWorkInit(int port);
 
-    void AcceptClient();
+    void AcceptClient(BlockQueue<Request*>* queue);
 
     void start();
 
@@ -56,7 +56,7 @@ private:
     bool quit_; // 是否退出
 
     //std::deque<Request*> queue_; // 处于queue_中的所有对象都是处于空闲状态
-    BlockQueue<Request*> queue_;
+    //BlockQueue<Request*> queue_;
 
     std::map<Channel*, Request*> map_; // 通过Channel 索引 Request
 
@@ -64,12 +64,12 @@ private:
     static int port_;
     static sockaddr_in local_addr_;
     static int kRequestCount_;
-    int request_count;
+    //int request_count;
 
     EpollPoll* poller_;
     Channel* listenChannel_;
     ThreadPool* pool_; // 线程池
-    Cache* cache_;      // 缓存
+
 
 };
 

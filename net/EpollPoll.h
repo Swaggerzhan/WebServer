@@ -15,9 +15,12 @@
 #include <cerrno>
 #include <sys/eventfd.h>
 #include "../base/Mutex.h"
+#include "../base/BlockQueue.h"
 
 
+class Request;
 class Channel;
+class Cache;
 
 class EpollPoll {
 public:
@@ -39,6 +42,8 @@ public:
     void runInLoop(Functor cb);
 
     void update(int op, Channel* channel);
+
+    BlockQueue<Request*>* getQueue();
 
 
 private:
@@ -66,6 +71,9 @@ private:
     std::deque<Functor> callBackQueue_; // 回调函数队列
     bool doPending_; // 正在调用回调函数
     MutexLock mutex_; // 互斥锁
+
+    BlockQueue<Request*> queue_;          //
+    Cache* cache_;
 
 };
 

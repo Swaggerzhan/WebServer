@@ -42,6 +42,8 @@ public:
 
     bool isEmpty() const { return count_ == 0; }
 
+    int size() const { return count_; }
+
 
 private:
 

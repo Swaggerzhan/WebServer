@@ -109,6 +109,7 @@ public:
     int send_index; /* 当前已发送的字节 */
     std::string route_;
     size_t file_length;
+    char* cache_buf_;               // 缓存的返回缓冲区
     off_t file_already_send_index;
 
     int file_fd; // 请求目标文件fd

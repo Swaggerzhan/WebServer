@@ -8,6 +8,7 @@
 
 #include <functional>
 
+class Request;
 
 class Channel {
 
@@ -15,6 +16,7 @@ public:
 
     typedef std::function<void()> callBack;
 
+    Channel(Request* request);
     Channel();
 
     ~Channel();
@@ -39,6 +41,8 @@ public:
 
     void handleEvent();
 
+    Request* request;
+
 private:
 
     bool isUsed_;
@@ -50,6 +54,7 @@ private:
     callBack readCallBack;
     callBack writeCallBack;
     callBack errorCallBack;
+
 };
 
 

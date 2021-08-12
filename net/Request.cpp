@@ -9,7 +9,7 @@
 #include <malloc.h>
 #include <sys/socket.h>
 #include "../base/Cache.h"
-
+#include <cassert>
 
 const std::string Request::code_200_ = "HTTP/1.1 200 OK\r\n";
 const std::string Request::code_403_ = "";
@@ -26,7 +26,7 @@ const int Request::recv_buf_size = 4096;
 
 
 Request::Request(Cache* cache)
-:   channel_(),
+:   channel_(this),
     cache_(cache)
 {
     recv_buf = new char[recv_buf_size];
@@ -34,6 +34,8 @@ Request::Request(Cache* cache)
 }
 
 void Request::init(int fd, int ev) {
+    // for debug
+    //assert( fd != 0);
     channel_.setfd(fd);
     channel_.setEvent(ev);
     channel_.setUsed(); // channel启用
@@ -44,6 +46,9 @@ void Request::init(int fd, int ev) {
 
 void Request::close_conn() {
     /* 直接关闭链接 */
+    //assert( channel_.getfd() != 0 );
+//    if ( channel_.getfd() == 0 )
+//        std::cout << "close fd: 0" << std::endl;
     ::close(channel_.getfd());
     //Log(L_DEBUG) << "close: " << channel_.getfd();
     channel_.reSet();
@@ -104,6 +109,15 @@ WriteProcess Request::write(){
                 if ( (errno == EAGAIN) || (errno == EWOULDBLOCK) ){
                     return WriteIncomplete;
                 }else{
+//                    std::cout << "Header WriteError: " << strerror(errno) << std::endl;
+//                    std::cout << "fd: " << channel_.getfd() << std::endl;
+                    if ( (channel_.getRetEvent() & EPOLLHUP)){
+                        std::cout << "EPOLLHUP" << std::endl;
+                    }
+                    if ((channel_.getRetEvent() & EPOLLRDHUP)){
+                        std::cout << "EPOLLRDHUP" << std::endl;
+                    }
+
                     return WriteError;
                 }
             }
@@ -116,14 +130,15 @@ WriteProcess Request::write(){
     }
     int len = 0;
     while ( true ){
-        len = sendfile(channel_.getfd(), file_fd,
-                &file_already_send_index, file_length-file_already_send_index);
+        assert( channel_.getIsUsed() );
+        len = ::send(channel_.getfd(), cache_buf_, file_length-file_already_send_index, 0);
+        file_already_send_index += len;
         if (len < 0){
             if ( (errno == EAGAIN) || (errno == EWOULDBLOCK) ){
-                //std::cout << "WriteIncomplete" << std::endl;
                 return WriteIncomplete;
             }else{
-                std::cout << "WriteError: " << strerror(errno) << std::endl;
+//                std::cout << "Context WriteError: " << strerror(errno) << std::endl;
+//                std::cout << "fd: " << channel_.getfd() << std::endl;
                 return WriteError;
             }
         }
@@ -134,11 +149,11 @@ WriteProcess Request::write(){
 //            return WriteOk;
             if (keep_alive){
                 reSet(); // 重置
-                close(file_fd);
+                //close(file_fd);
                 return WriteOk;
                 //TODO: keep-alive处理，在Request? 还是HttpServer？
             }else{
-                close(file_fd);
+                //close(file_fd);
                 return WriteOk;
             }
         }
@@ -150,7 +165,7 @@ WriteProcess Request::write(){
 httpDecode Request::decode_route() {
     /* /和空路由直接返回index页面 */
     if ( (strcasecmp(url, "/") == 0) || (url == nullptr)){
-        route_ = route_dir_ + "index.html";
+        route_ += "index.html";
         return GET_REQUEST;
     }
     if (url[0] == '/')
@@ -160,43 +175,71 @@ httpDecode Request::decode_route() {
     if (check_dot(url)){
         return FORBIDDEN_REQUEST;
     }
-    route_ = route_dir_ + url;
+    route_ += url;
     return GET_REQUEST;
 }
 
 
 void Request::load_content() {
-
-//    int* len = new int;
-//    char* buf = cache_->getCache(route_, len);
-
-
-    file_fd = open(route_.c_str(), O_RDONLY);
-    if (file_fd < 0){
-        switch (errno){
-            case ENOENT:{
-                http_code = NOT_FOUND;
-                route_ = route_dir_ + "404.html";
-                break;
-            }
-            case EACCES:{
-                http_code = FORBIDDEN_REQUEST;
-                route_ = route_dir_ + "403.html";
-                break;
-            }
-            default:{
-                http_code = INTERNAL_ERROR;
-                route_ = route_dir_ + "500.html";
-                break;
+    start:
+    int* len = new int;
+    char* buf = cache_->getCache(route_, len);
+    if ( !buf ){ // 不存在缓存
+        int retCode = 0;
+        if ( ( retCode = cache_->hasFile(route_)) == 0 ){ // 加载缓存
+            cache_->addCache(route_);
+        }else { // 返回错误代码
+            switch ( retCode ){
+                case ENOENT:{
+                    http_code = NOT_FOUND;
+                    route_ = route_dir_ + "404.html";
+                    break;
+                }
+                case EACCES:{
+                    http_code = FORBIDDEN_REQUEST;
+                    route_ = route_dir_ + "403.html";
+                    break;
+                }
+                default:{
+                    http_code = INTERNAL_ERROR;
+                    route_ = route_dir_ + "500.html";
+                    break;
+                }
             }
         }
-        file_fd = open(route_.c_str(), O_RDONLY);
+        goto start;
+    }else { // 缓存已经存在
+        accept_type_ = mime_.getAcceptType(route_);
+        file_length = *len;
+        cache_buf_ = buf;
     }
-    /* 解析返回类型 */
-    accept_type_ = mime_.getAcceptType(route_);
-    struct stat file_infor{};
-    fstat(file_fd, &file_infor);
-    file_length = file_infor.st_size;
+
+//    file_fd = open(route_.c_str(), O_RDONLY);
+//    if (file_fd < 0){
+//        switch (errno){
+//            case ENOENT:{
+//                http_code = NOT_FOUND;
+//                route_ = route_dir_ + "404.html";
+//                break;
+//            }
+//            case EACCES:{
+//                http_code = FORBIDDEN_REQUEST;
+//                route_ = route_dir_ + "403.html";
+//                break;
+//            }
+//            default:{
+//                http_code = INTERNAL_ERROR;
+//                route_ = route_dir_ + "500.html";
+//                break;
+//            }
+//        }
+//        file_fd = open(route_.c_str(), O_RDONLY);
+//    }
+//    /* 解析返回类型 */
+//    accept_type_ = mime_.getAcceptType(route_);
+//    struct stat file_infor{};
+//    fstat(file_fd, &file_infor);
+//    file_length = file_infor.st_size;
 
 }
 
@@ -444,8 +487,9 @@ void Request::reSet() {
     file_length = 0;
     http_header_send_ok = false;
     file_already_send_index = 0;
+    cache_buf_ = nullptr;
     //route_.clear();
-    route_ = "";
+    route_ = route_dir_;
     memset(recv_buf, '\0', recv_buf_size);
     respond_header_.clear();
 
