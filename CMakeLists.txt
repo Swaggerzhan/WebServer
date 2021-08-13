@@ -15,8 +15,8 @@ set(CMAKE_CXX_STANDARD 14)
 
 set(CMAKE_BUILD_TYPE DEBUG)
 
-include_directories(/usr/local/include/hiredis/)
-link_directories(/usr/local/lib/)
+#include_directories(/usr/local/include/hiredis/)
+#link_directories(/usr/local/lib/)
 
 
 add_executable(WebServer main.cpp
@@ -38,10 +38,11 @@ add_executable(WebServer main.cpp
 
         net/EpollPoll.h net/EpollPoll.cpp
 
-        net/Channel.h net/Channel.cpp net/HttpServer.cpp net/HttpServer.h net/Redis.h net/Redis.cpp base/Cache.h base/Cache.cpp)
+        net/Channel.h net/Channel.cpp net/HttpServer.cpp net/HttpServer.h
+        base/Cache.h base/Cache.cpp)
 
 find_package(Threads)
 target_link_libraries(WebServer ${CMAKE_THREAD_LIBS_INIT})
 
-target_link_libraries(WebServer hiredis)
+#target_link_libraries(WebServer hiredis)
 

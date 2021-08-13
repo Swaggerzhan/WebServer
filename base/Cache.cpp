@@ -52,17 +52,20 @@ char* Cache::getCache(string key, int *len) {
     return iter->second->buf;
 }
 
-
+/* 返回0表示文件存在 */
 int Cache::hasFile(string& key) {
     {
         MutexLockGuard lock(mutex_);
         if (map_.find(key) != map_.end() )
             return 0;
     }
-    int fd = open(key.c_str(), O_RDONLY);
-    if ( fd < 0 )
+    struct stat file{};
+    int ret = stat(key.c_str(), &file);
+    if ( ret < 0 )
         return errno;
-    close(fd);
+    /* 目录，不是文件 */
+    if ( file.st_mode & S_IFDIR )
+        return EACCES; // 没有权限访问目录
     return 0;
 }
 

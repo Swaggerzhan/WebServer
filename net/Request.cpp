@@ -131,18 +131,24 @@ WriteProcess Request::write(){
     int len = 0;
     while ( true ){
         assert( channel_.getIsUsed() );
-        len = ::send(channel_.getfd(), cache_buf_, file_length-file_already_send_index, 0);
-        file_already_send_index += len;
+        len = ::send(channel_.getfd(), cache_buf_+file_already_send_index,
+                     file_length-file_already_send_index, 0);
+        /* len需要大于0才需要加 */
+        if ( len > 0 )
+            file_already_send_index += len;
         if (len < 0){
             if ( (errno == EAGAIN) || (errno == EWOULDBLOCK) ){
+                std::cout << "round write len: " << file_already_send_index << std::endl;
                 return WriteIncomplete;
             }else{
+                std::cout << "Write Error!" << std::endl;
 //                std::cout << "Context WriteError: " << strerror(errno) << std::endl;
 //                std::cout << "fd: " << channel_.getfd() << std::endl;
                 return WriteError;
             }
         }
         if (len == 0){
+            std::cout << "write complete: " << file_already_send_index << std::endl;
 //            reSet();
 //            close(file_fd);
 //            //std::cout << "send len: " << file_already_send_index << std::endl;
@@ -213,33 +219,6 @@ void Request::load_content() {
         file_length = *len;
         cache_buf_ = buf;
     }
-
-//    file_fd = open(route_.c_str(), O_RDONLY);
-//    if (file_fd < 0){
-//        switch (errno){
-//            case ENOENT:{
-//                http_code = NOT_FOUND;
-//                route_ = route_dir_ + "404.html";
-//                break;
-//            }
-//            case EACCES:{
-//                http_code = FORBIDDEN_REQUEST;
-//                route_ = route_dir_ + "403.html";
-//                break;
-//            }
-//            default:{
-//                http_code = INTERNAL_ERROR;
-//                route_ = route_dir_ + "500.html";
-//                break;
-//            }
-//        }
-//        file_fd = open(route_.c_str(), O_RDONLY);
-//    }
-//    /* 解析返回类型 */
-//    accept_type_ = mime_.getAcceptType(route_);
-//    struct stat file_infor{};
-//    fstat(file_fd, &file_infor);
-//    file_length = file_infor.st_size;
 
 }
 
